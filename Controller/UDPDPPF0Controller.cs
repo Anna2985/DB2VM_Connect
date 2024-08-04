@@ -24,8 +24,8 @@ namespace DB2VM_API.Controller
         static string DB2_password = $"{ConfigurationManager.AppSettings["DB2_password"]}";
         static string DB2_schema = $"{ConfigurationManager.AppSettings["DB2_schema"]}";
 
-        [HttpGet]
-        public string Get(string? BarCode)
+        [HttpGet("get_bed_list_by_nusta")]
+        public string Get()
         {
             MyTimerBasic myTimerBasic = new MyTimerBasic();
             returnData returnData = new returnData();
@@ -114,5 +114,7 @@ namespace DB2VM_API.Controller
             }
 
         }
+        
     }
+
 }
