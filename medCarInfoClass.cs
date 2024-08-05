@@ -9,7 +9,7 @@ using System.ComponentModel;
 namespace DB2VM_API
 {
     [EnumDescription("med_carInfo")]
-    public enum enum_病床資訊
+    public enum enum_med_carInfo
     {
         [Description("GUID,VARCHAR,50,PRIMARY")]
         GUID,
@@ -25,92 +25,64 @@ namespace DB2VM_API
         護理站,
         [Description("床號,VARCHAR,10,NONE")]
         床號,
-        [Description("占床狀態,VARCHAR,100,NONE")]
+        [Description("占床狀態,VARCHAR,10,NONE")]
         占床狀態,
-        [Description("調劑狀態,VARCHAR,100,NONE")]
+        [Description("調劑狀態,VARCHAR,10,NONE")]
         調劑狀態,
-        [Description("性別,VARCHAR,100,NONE")]
+        [Description("性別,VARCHAR,10,NONE")]
         性別,
-        [Description("出生日期,VARCHAR,100,NONE")]
+        [Description("出生日期,VARCHAR,10,NONE")]
         出生日期,
-        [Description("科別,VARCHAR,100,NONE")]
+        [Description("科別,VARCHAR,10,NONE")]
         科別,
-        [Description("財務,VARCHAR,100,NONE")]
+        [Description("財務,VARCHAR,10,NONE")]
         財務,
-        [Description("入院日期,VARCHAR,100,NONE")]
+        [Description("入院日期,VARCHAR,10,NONE")]
         入院日期,
-        [Description("訪視號碼,VARCHAR,100,NONE")]
+        [Description("訪視號碼,VARCHAR,10,NONE")]
         訪視號碼,
-        [Description("診所名稱,VARCHAR,100,NONE")]
+        [Description("診所名稱,VARCHAR,10,NONE")]
         診所名稱,
-        [Description("醫生姓名,VARCHAR,100,NONE")]
+        [Description("醫生姓名,VARCHAR,10,NONE")]
         醫生姓名,
-        [Description("身高,VARCHAR,100,NONE")]
+        [Description("身高,VARCHAR,10,NONE")]
         身高,
-        [Description("體重,VARCHAR,100,NONE")]
+        [Description("體重,VARCHAR,10,NONE")]
         體重,
-        [Description("體表面積,VARCHAR,100,NONE")]
+        [Description("體表面積,VARCHAR,10,NONE")]
         體表面積,
-        [Description("國際疾病分類代碼1,VARCHAR,100,NONE")]
+        [Description("國際疾病分類代碼1,VARCHAR,10,NONE")]
         國際疾病分類代碼1,
-        [Description("疾病說明1,VARCHAR,100,NONE")]
+        [Description("疾病說明1,VARCHAR,10,NONE")]
         疾病說明1,
-        [Description("國際疾病分類代碼2,VARCHAR,100,NONE")]
+        [Description("國際疾病分類代碼2,VARCHAR,10,NONE")]
         國際疾病分類代碼2,
-        [Description("疾病說明2,VARCHAR,100,NONE")]
+        [Description("疾病說明2,VARCHAR,10,NONE")]
         疾病說明2,
-        [Description("國際疾病分類代碼3,VARCHAR,100,NONE")]
+        [Description("國際疾病分類代碼3,VARCHAR,10,NONE")]
         國際疾病分類代碼3,
-        [Description("疾病說明3,VARCHAR,100,NONE")]
+        [Description("疾病說明3,VARCHAR,10,NONE")]
         疾病說明3,
-        [Description("國際疾病分類代碼4,VARCHAR,100,NONE")]
+        [Description("國際疾病分類代碼4,VARCHAR,10,NONE")]
         國際疾病分類代碼4,
-        [Description("疾病說明4,VARCHAR,100,NONE")]
+        [Description("疾病說明4,VARCHAR,10,NONE")]
         疾病說明4,
-        [Description("鼻胃管使用狀況,VARCHAR,100,NONE")]
+        [Description("鼻胃管使用狀況,VARCHAR,10,NONE")]
         鼻胃管使用狀況,
-        [Description("其他管路使用狀況,VARCHAR,100,NONE")]
+        [Description("其他管路使用狀況,VARCHAR,10,NONE")]
         其他管路使用狀況,
-        [Description("過敏史,VARCHAR,100,NONE")]
+        [Description("過敏史,VARCHAR,10,NONE")]
         過敏史,
         [Description("檢驗結果,LONGTEXT,500,NONE")]
         檢驗結果,
         [Description("處方,LONGTEXT,10,NONE")]
-        處方, 
-        [Description("處方2,LONGTEXT,10,NONE")]
-        處方2
-
-        //[Description("白蛋白,VARCHAR,10,NONE")]
-        //白蛋白,
-        //[Description("肌酸酐,VARCHAR,10,NONE")]
-        //肌酸酐,
-        //[Description("估算腎小球過濾率,VARCHAR,10,NONE")]
-        //估算腎小球過濾率,
-        //[Description("丙氨酸氨基轉移酶,VARCHAR,10,NONE")]
-        //丙氨酸氨基轉移酶,
-        //[Description("鉀離子,VARCHAR,10,NONE")]
-        //鉀離子,
-        //[Description("鈣離子,VARCHAR,10,NONE")]
-        //鈣離子,
-        //[Description("總膽紅素,VARCHAR,10,NONE")]
-        //總膽紅素,
-        //[Description("鈉離子,VARCHAR,10,NONE")]
-        //鈉離子,
-        //[Description("白血球計數,VARCHAR,10,NONE")]
-        //白血球計數,
-        //[Description("血紅素,VARCHAR,10,NONE")]
-        //血紅素,
-        //[Description("血小板計數,VARCHAR,10,NONE")]
-        //血小板計數,
-        //[Description("國際標準化比率,VARCHAR,10,NONE")]
-        //國際標準化比率
-
+        處方
     }
     public class medCarInfoClass
     {
         [JsonPropertyName("GUID")]
         public string GUID { get; set; }
-        [JsonPropertyName("pnamec")]
+        [JsonPropertyName("pt_name")]
         public string 姓名 { get; set; }
         [JsonPropertyName("caseno")]
         public string 住院號 { get; set; }
@@ -136,7 +108,7 @@ namespace DB2VM_API
         public string 財務 { get; set; }
         [JsonPropertyName("padmdt")]
         public string 入院日期 { get; set; }
-        [JsonPropertyName("pvsdo")]
+        [JsonPropertyName("pvsdno")]
         public string 訪視號碼 { get; set; }
         [JsonPropertyName("pvsnam")]
         public string 診所名稱 { get; set; }
@@ -174,8 +146,6 @@ namespace DB2VM_API
         public object 檢驗結果 { get; set; }
         [JsonPropertyName("prescription")]
         public object 處方 { get; set; }
-        [JsonPropertyName("prescription2")]
-        public object 處方2 { get; set; }
         public class ICP_By_bedNum : IComparer<medCarInfoClass>
         {
             public int Compare(medCarInfoClass x, medCarInfoClass y)
@@ -183,7 +153,83 @@ namespace DB2VM_API
                 return (x.床號.StringToInt32()).CompareTo(y.床號.StringToInt32());
             }
         }
+        static public List<medCarInfoClass> update_bed_list(string API_Server, List<medCarInfoClass> medCarInfoClasses)
+        {
+            List<medCarInfoClass> out_medCarInfoClass = new List<medCarInfoClass>();
+            string url = $"{API_Server}/api/med_cart/update_bed_list";
 
+            returnData returnData = new returnData();
+            returnData.Data = medCarInfoClasses;
+            //returnData.ServerName = ServerName;
+
+            string json_in = returnData.JsonSerializationt();
+            string json_out = Net.WEBApiPostJson(url, json_in);
+            returnData = json_out.JsonDeserializet<returnData>();
+            if (returnData == null) return null;
+            if (returnData.Code != 200) return null;
+            out_medCarInfoClass = returnData.Data.ObjToClass<List<medCarInfoClass>>();
+            out_medCarInfoClass.Sort(new medCarInfoClass.ICP_By_bedNum());
+            return out_medCarInfoClass;
+        }
+        static public List<medCarInfoClass> get_patient_by_bedNum(string API_Server, List<string> Info)
+        {
+            List<medCarInfoClass> out_medCarInfoClass = new List<medCarInfoClass>();
+            string url = $"{API_Server}/api/med_cart/get_patient_by_bedNum";
+            string str = "";
+            for (int i = 0; i < Info.Count; i++)
+            {
+                str += Info[i];
+                if (i != Info.Count - 1) str += ",";
+            }
+            returnData returnData = new returnData();
+            returnData.ValueAry.Add(str);
+            string json_in = returnData.JsonSerializationt();
+            string json_out = Net.WEBApiPostJson(url, json_in);
+            returnData = json_out.JsonDeserializet<returnData>();
+            if (returnData == null) return null;
+            if (returnData.Code != 200) return null;
+            out_medCarInfoClass = returnData.Data.ObjToClass<List<medCarInfoClass>>();
+            out_medCarInfoClass.Sort(new medCarInfoClass.ICP_By_bedNum());
+            return out_medCarInfoClass;
+
+        }
+        static public List<medCarInfoClass> get_patient_by_hnursta(string API_Server, List<string> Info)
+        {
+            List<medCarInfoClass> out_medCarInfoClass = new List<medCarInfoClass>();
+            string url = $"{API_Server}/api/med_cart/get_patient_by_hnursta";
+            string str = "";
+            for (int i = 0; i < Info.Count; i++)
+            {
+                str += Info[i];
+                if (i != Info.Count - 1) str += ",";
+            }
+            returnData returnData = new returnData();
+            returnData.ValueAry.Add(str);
+            string json_in = returnData.JsonSerializationt();
+            string json_out = Net.WEBApiPostJson(url, json_in);
+            returnData = json_out.JsonDeserializet<returnData>();
+            if (returnData == null) return null;
+            if (returnData.Code != 200) return null;
+            out_medCarInfoClass = returnData.Data.ObjToClass<List<medCarInfoClass>>();
+            out_medCarInfoClass.Sort(new medCarInfoClass.ICP_By_bedNum());
+            return out_medCarInfoClass;
+
+        }
+
+        static public List<medCarInfoClass> get_all(string API_Server)
+        {
+            List<medCarInfoClass> out_medCarInfoClass = new List<medCarInfoClass>();
+            string url = $"{API_Server}/api/med_cart/get_all";
+            returnData returnData = new returnData();
+            string json_in = returnData.JsonSerializationt();
+            string json_out = Net.WEBApiPostJson(url, json_in);
+            returnData = json_out.JsonDeserializet<returnData>();
+            if (returnData == null) return null;
+            if (returnData.Code != 200) return null;
+            out_medCarInfoClass = returnData.Data.ObjToClass<List<medCarInfoClass>>();
+            out_medCarInfoClass.Sort(new medCarInfoClass.ICP_By_bedNum());
+            return out_medCarInfoClass;
+        }
     }
 
     public class testResult
@@ -212,15 +258,5 @@ namespace DB2VM_API
         public string 血小板計數 { get; set; }
         [JsonPropertyName("rtinr")]
         public string 國際標準化比率 { get; set; }
-    }
-    public class DataList<T>
-    {
-        public List<T> Data { get; set; }
-        public List<string> ValueAry { get; set; }
-        public DataList()
-        {
-            Data = new List<T>();
-            ValueAry = new List<string>();
-        }
     }
 }

@@ -232,16 +232,16 @@ namespace DB2VM_API.Controller._API_VM調劑系統
                         prescription.Add(medCpoeClass);
                     }
 
-                    if (prescription.Count > 3)
-                    {
-                        medCarInfoClasses[i].處方 = prescription.GetRange(0, Math.Min(4, prescription.Count));
-                        medCarInfoClasses[i].處方2 = prescription.GetRange(3, prescription.Count - 3);
-                    }
-                    else
-                    {
-                        medCarInfoClasses[i].處方 = prescription;
-                        medCarInfoClasses[i].處方2 = new List<medCpoeClass>();  
-                    }
+                    //if (prescription.Count > 3)
+                    //{
+                    //    medCarInfoClasses[i].處方 = prescription.GetRange(0, Math.Min(4, prescription.Count));
+                    //    medCarInfoClasses[i].處方2 = prescription.GetRange(3, prescription.Count - 3);
+                    //}
+                    //else
+                    //{
+                    //    medCarInfoClasses[i].處方 = prescription;
+                    //    medCarInfoClasses[i].處方2 = new List<medCpoeClass>();  
+                    //}
                     cmd.Dispose();
        
                     //string json_prescription = prescription.JsonSerializationt();
@@ -312,15 +312,18 @@ namespace DB2VM_API.Controller._API_VM調劑系統
                 //string responseString = Basic.Net.WEBApiPostJson(url, jsonData, false);
 
                 //取得目標病人資料
-                string url = $"http://{Server}:4436/api/med_cart/get_patient_by_bedNum";
-                DataList<object[]> dataList = new DataList<object[]>()
-                {
-                    ValueAry = new List<string> { 藥局, 護理站, 床號 }
-                };
-                string jsonData = dataList.JsonSerializationt(true);
-                string responseString = Basic.Net.WEBApiPostJson(url, jsonData, false);
-                returnData result = responseString.JsonDeserializet<returnData>();
-                List<medCarInfoClass> target_patient = (result.Data).ObjToClass<List<medCarInfoClass>>();
+                //string url = $"http://{Server}:4436/api/med_cart/get_patient_by_bedNum";
+
+                //DataList<object[]> dataList = new DataList<object[]>()
+                //{
+                //    ValueAry = new List<string> { 藥局, 護理站, 床號 }
+                //};
+                List<string> input = new List<string> { 藥局, 護理站, 床號 };
+                List<medCarInfoClass> target_patient = medCarInfoClass.get_patient_by_bedNum(Server, input);
+                //string jsonData = dataList.JsonSerializationt(true);
+                //string responseString = Basic.Net.WEBApiPostJson(url, jsonData, false);
+                //returnData result = responseString.JsonDeserializet<returnData>();
+                //List<medCarInfoClass> target_patient = (result.Data).ObjToClass<List<medCarInfoClass>>();
 
                 if (target_patient.Count != 1)
                 {
@@ -405,17 +408,19 @@ namespace DB2VM_API.Controller._API_VM調劑系統
                 List<medCarInfoClass> update_list = new List<medCarInfoClass>();
                 update_list.Add(target_patient[0]);
                 //server
-                url = $"http://{Server}:4436/api/med_cart/update_bed_list";
-                DataList<medCarInfoClass> dataList_class = new DataList<medCarInfoClass>
-                {
-                    Data = new List<medCarInfoClass>(update_list)
-                };
-                jsonData = dataList_class.JsonSerializationt(true);
-                responseString = Basic.Net.WEBApiPostJson(url, jsonData, false);
+                //url = $"http://{Server}:4436/api/med_cart/update_bed_list";
+                //DataList<medCarInfoClass> dataList_class = new DataList<medCarInfoClass>
+                //{
+                //    Data = new List<medCarInfoClass>(update_list)
+                //};
 
+                //jsonData = dataList_class.JsonSerializationt(true);
+                //responseString = Basic.Net.WEBApiPostJson(url, jsonData, false);
+
+                List<medCarInfoClass> output = medCarInfoClass.update_bed_list(Server, update_list);
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
-                returnData.Data = update_list;
+                returnData.Data = output;
                 returnData.Result = $"取得{target_patient[0].姓名}的處方";
                 return returnData.JsonSerializationt(true);
             }
@@ -447,15 +452,18 @@ namespace DB2VM_API.Controller._API_VM調劑系統
                 //string responseString = Basic.Net.WEBApiPostJson(url, jsonData, false);
 
                 //取得目標病人資料
-                string url = $"http://{Server}:4436/api/med_cart/get_all";
-                DataList<object[]> dataList = new DataList<object[]>()
-                {
-                    ValueAry = new List<string>()
-                };
-                string jsonData = dataList.JsonSerializationt(true);
-                string responseString = Basic.Net.WEBApiPostJson(url, jsonData, false);
-                returnData result = responseString.JsonDeserializet<returnData>();
-                List<medCarInfoClass> target_patient = (result.Data).ObjToClass<List<medCarInfoClass>>();
+
+                //string url = $"http://{Server}:4436/api/med_cart/get_all";
+                //DataList<object[]> dataList = new DataList<object[]>()
+                //{
+                //    ValueAry = new List<string>()
+                //};
+                //string jsonData = dataList.JsonSerializationt(true);
+                //string responseString = Basic.Net.WEBApiPostJson(url, jsonData, false);
+                //returnData result = responseString.JsonDeserializet<returnData>();
+                //List<medCarInfoClass> target_patient = (result.Data).ObjToClass<List<medCarInfoClass>>();
+                List<medCarInfoClass> target_patient = medCarInfoClass.get_all(Server);
+
                 List<medCarInfoClass> update_list = new List<medCarInfoClass>();
 
                 for (int i = 0; i < target_patient.Count; i++)
@@ -534,13 +542,13 @@ namespace DB2VM_API.Controller._API_VM調劑系統
                 }
 
                 //server
-                url = $"http://{Server}:4436/api/med_cart/update_bed_list";
-                DataList<medCarInfoClass> dataList_class = new DataList<medCarInfoClass>
-                {
-                    Data = new List<medCarInfoClass>(update_list)
-                };
-                jsonData = dataList_class.JsonSerializationt(true);
-                responseString = Basic.Net.WEBApiPostJson(url, jsonData, false);
+                //url = $"http://{Server}:4436/api/med_cart/update_bed_list";
+                //DataList<medCarInfoClass> dataList_class = new DataList<medCarInfoClass>
+                //{
+                //    Data = new List<medCarInfoClass>(update_list)
+                //};
+                //jsonData = dataList_class.JsonSerializationt(true);
+                //responseString = Basic.Net.WEBApiPostJson(url, jsonData, false);
 
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";

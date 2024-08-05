@@ -62,8 +62,9 @@ namespace DB2VM_API.Controller.API_SP
             returnData returnData = new returnData();
             string 藥局 = "UC02";
             string 護理站 = "C039";
+            string Server = "";
             List<medCarInfoClass> medCarInfoClasses = ExecuteUDPDPPF1(藥局, 護理站);
-
+            //List<medCarInfoClass> output_medCarInfoClass = medCarInfoClass.update_bed_list(Server, medCarInfoClasses);
             returnData.Code = 200;
             returnData.TimeTaken = $"{myTimerBasic}";
             returnData.Data = medCarInfoClasses;
