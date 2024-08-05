@@ -18,6 +18,7 @@ namespace DB2VM_API.Controller.API_SP
     [ApiController]
     public class med_cart : ControllerBase
     {
+        static private string API_Server = "http://127.0.0.1:4433/api/serversetting";
         static string DB2_schema = $"{ConfigurationManager.AppSettings["DB2_schema"]}";
         [HttpPost("get_bed_list_by_cart")]
         public string get_bed_list_by_cart([FromBody] returnData returnData)
@@ -37,15 +38,19 @@ namespace DB2VM_API.Controller.API_SP
                     returnData.Result = $"returnData.ValueAry 內容應為[藥局, 護理站]";
                     return returnData.JsonSerializationt(true);
                 }
+                List<ServerSettingClass> serverSettingClasses = ServerSettingClassMethod.WebApiGet($"{API_Server}");
+                serverSettingClasses = serverSettingClasses.MyFind("Main", "網頁", "VM端");
+                string Server = serverSettingClasses[0].Server;
                 string 藥局 = returnData.ValueAry[0];
                 string 護理站 = returnData.ValueAry[1];
                 List<medCarInfoClass> bedList = ExecuteUDPDPPF1(藥局, 護理站);
                 List<medCarInfoClass> bedListInfo = ExecuteUDPDPPF0(bedList);
                 List<medCarInfoClass> bedListCpoe = ExecuteUDPDPDSP(bedListInfo);
+                List<medCarInfoClass> update_bedList = medCarInfoClass.update_bed_list(Server, bedListCpoe);
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
-                returnData.Data = bedListCpoe;
-                returnData.Result = $"取得 {護理站} 的病床資訊共{bedListCpoe.Count}筆";
+                returnData.Data = update_bedList;
+                returnData.Result = $"取得 {護理站} 的病床資訊共{update_bedList.Count}筆";
                 return returnData.JsonSerializationt(true);
             }
             catch(Exception ex)
@@ -77,14 +82,18 @@ namespace DB2VM_API.Controller.API_SP
             MyTimerBasic myTimerBasic = new MyTimerBasic();
             returnData returnData = new returnData();
             List<medCarInfoClass> medCarInfoClassList = new List<medCarInfoClass>();
-            medCarInfoClassList[0].病歷號 = "";
-            medCarInfoClassList[0].住院號 = "";
+            medCarInfoClass v1 = new medCarInfoClass 
+            {
+                病歷號 = "",
+                住院號 = ""
+            };
+            medCarInfoClassList.Add(v1);
             List<medCarInfoClass> medCarInfoClasses = ExecuteUDPDPPF0(medCarInfoClassList);
 
             returnData.Code = 200;
             returnData.TimeTaken = $"{myTimerBasic}";
             returnData.Data = medCarInfoClasses;
-            returnData.Result = $"取得病床處方共{medCarInfoClasses.Count}筆";
+            returnData.Result = $"取得病人資料共{medCarInfoClasses.Count}筆";
             return returnData.JsonSerializationt(true);
         }
         [HttpGet("UDPDPDSP")]
@@ -92,9 +101,13 @@ namespace DB2VM_API.Controller.API_SP
         {
             MyTimerBasic myTimerBasic = new MyTimerBasic();
             returnData returnData = new returnData();
-            List<medCarInfoClass> medCarInfoClassList = new List<medCarInfoClass>();
-            medCarInfoClassList[0].護理站 = "";
-            medCarInfoClassList[0].住院號 = "";
+            List<medCarInfoClass> medCarInfoClassList = new List<medCarInfoClass>();            
+            medCarInfoClass v1 = new medCarInfoClass
+            {
+                護理站 = "",
+                住院號 = ""
+            };
+            medCarInfoClassList.Add(v1);
             List<medCarInfoClass> medCarInfoClasses = ExecuteUDPDPDSP(medCarInfoClassList);
 
             returnData.Code = 200;
@@ -163,6 +176,7 @@ namespace DB2VM_API.Controller.API_SP
             string procName = $"{DB2_schema}.{SP}";
             for (int i = 0; i < medCarInfoClasses.Count; i++)
             {
+                if (medCarInfoClasses[i].住院號.StringIsEmpty()) continue;
                 string 病歷號 = medCarInfoClasses[i].病歷號;
                 string 住院號 = medCarInfoClasses[i].住院號;
                 DB2Command cmd = MyDb2Connection.CreateCommand();
