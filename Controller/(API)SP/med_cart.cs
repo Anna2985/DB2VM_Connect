@@ -20,6 +20,32 @@ namespace DB2VM_API.Controller.API_SP
     {
         static private string API_Server = "http://127.0.0.1:4433/api/serversetting";
         static string DB2_schema = $"{ConfigurationManager.AppSettings["DB2_schema"]}";
+        [HttpPost("test")]
+        public string test([FromBody] returnData returnData)
+        {
+            MyTimerBasic myTimerBasic = new MyTimerBasic();
+            try
+            {
+
+                List<medCarInfoClass> bedListCpoe = returnData.Data.ObjToClass<List<medCarInfoClass>>();
+                List<ServerSettingClass> serverSettingClasses = ServerSettingClassMethod.WebApiGet($"{API_Server}");
+                serverSettingClasses = serverSettingClasses.MyFind("Main", "網頁", "VM端");
+                string Server = serverSettingClasses[0].Server;
+                Server += ":4436"; 
+                List<medCarInfoClass> update_bedList = medCarInfoClass.update_bed_list(Server, bedListCpoe);
+                returnData.Code = 200;
+                returnData.TimeTaken = $"{myTimerBasic}";
+                returnData.Data = update_bedList;
+                returnData.Result = $"取得病床資訊共{update_bedList.Count}筆";
+                return returnData.JsonSerializationt(true);
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = -200;
+                returnData.Result = $"Exception:{ex.Message}";
+                return returnData.JsonSerializationt(true);
+            }
+        }
         [HttpPost("get_bed_list_by_cart")]
         public string get_bed_list_by_cart([FromBody] returnData returnData)
         {
