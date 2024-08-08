@@ -77,7 +77,7 @@ namespace DB2VM_API.Controller.API_SP
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
                 returnData.Data = update_bedList;
-                returnData.Result = $"取得 {護理站} 已佔床病床資訊共{update_bedList.Count}筆";
+                returnData.Result = $"取得 {護理站} 病床資訊共{update_bedList.Count}/{bedListCpoe.Count}筆";
                 return returnData.JsonSerializationt(true);
             }
             catch(Exception ex)
@@ -405,7 +405,7 @@ namespace DB2VM_API.Controller.API_SP
                                 prescription.Add(medCpoeClass);
                             }
                             //obj_處方 = prescription.ClassToSQL<medCpoeClass, enum_med_cpoe>();
-                            medCarInfoClass.處方 = prescription.JsonSerializationt();
+                            medCarInfoClass.處方 = prescription;
                         }
                     }
                 }

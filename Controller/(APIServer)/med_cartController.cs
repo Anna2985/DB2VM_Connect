@@ -63,7 +63,7 @@ namespace DB2VM_API.Controller._APIServer_
             string Password = serverSettingClass.Password;
             uint Port = (uint)serverSettingClass.Port.StringToInt32();
 
-            Table table = MethodClass.CheckCreatTable(serverSettingClass, new enum_病床資訊());
+            Table table = MethodClass.CheckCreatTable(serverSettingClass, new enum_med_carInfo());
             return table.JsonSerializationt(true);
         }
     }

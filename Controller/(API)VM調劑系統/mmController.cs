@@ -180,7 +180,7 @@ namespace DB2VM_API.Controller._API_VM調劑系統
                     return returnData.JsonSerializationt(true);
                 }
 
-                List<object[]> list_病患資料 = medCarInfoClasses.ClassToSQL<medCarInfoClass, enum_病床資訊>();
+                List<object[]> list_病患資料 = medCarInfoClasses.ClassToSQL<medCarInfoClass, enum_med_carInfo>();
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
                 returnData.Data = list_病患資料;
