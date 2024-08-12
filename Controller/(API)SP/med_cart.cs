@@ -32,7 +32,7 @@ namespace DB2VM_API.Controller.API_SP
                 serverSettingClasses = serverSettingClasses.MyFind("Main", "網頁", "VM端");
                 string Server = serverSettingClasses[0].Server;
                 string API = $"http://{Server}:4436";
-                List<medCarInfoClass> update_bedList = medCarInfoClass.update_bed_list(Server, bedListCpoe);
+                List<medCarInfoClass> update_bedList = medCarInfoClass.update_med_carinfo(Server, bedListCpoe);
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
                 returnData.Data = update_bedList;
@@ -74,9 +74,11 @@ namespace DB2VM_API.Controller.API_SP
                 List<medCarInfoClass> bedListInfo = ExecuteUDPDPPF0(bedList);
 
                 List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(bedListInfo);
+                List<string> valueAry = new List<string> { 藥局, 護理站 };
 
-                List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_bed_list(API, bedListInfo);
-                //List<medCpoeClass> update_medCpoeClass = 
+                List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedListInfo);
+                List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe, valueAry);
+
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
                 returnData.Data = update_medCarInfoClass;
@@ -348,11 +350,13 @@ namespace DB2VM_API.Controller.API_SP
             {
                 MyDb2Connection.Open();
                 string procName = $"{DB2_schema}.UDPDPDSP";
+                List<medCpoeClass> prescription = new List<medCpoeClass>();
                 foreach (var medCarInfoClass in medCarInfoClasses)
                 {
                     if (medCarInfoClass.住院號.StringIsEmpty()) continue;
                     string time = DateTime.Now.ToString("HHmm");
-                    using(DB2Command cmd = MyDb2Connection.CreateCommand())
+                    string 藥局 = medCarInfoClass.藥局;
+                    using (DB2Command cmd = MyDb2Connection.CreateCommand())
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.CommandText = procName;
@@ -362,18 +366,24 @@ namespace DB2VM_API.Controller.API_SP
                         DB2Parameter RET = cmd.Parameters.Add("@RET", DB2Type.Integer);
                         using(DB2DataReader reader = cmd.ExecuteReader())
                         {
-                            List<medCpoeClass> prescription = new List<medCpoeClass>();
                             while (reader.Read())
                             {
+                                string 開始日期 = reader["UDBGNDT2"].ToString().Trim();
+                                string 開始時間 = reader["UDBGNTM"].ToString().Trim();
+                                string 日期時間 = $"{開始日期} {開始時間.Substring(0, 2)}:{開始時間.Substring(2, 2)}:00";
+                                DateTime 開始日期時間 = DateTime.ParseExact(日期時間, "yyyy-MM-dd HH:mm:ss", null);
+                                string 結束日期 = reader["UDENDDT2"].ToString().Trim();
+                                string 結束時間 = reader["UDENDTM"].ToString().Trim();
+                                日期時間 = $"{開始日期} {開始時間.Substring(0, 2)}:{開始時間.Substring(2, 2)}:00";
+                                DateTime 結束日期時間 = DateTime.ParseExact(日期時間, "yyyy-MM-dd HH:mm:ss", null);
                                 medCpoeClass medCpoeClass = new medCpoeClass
                                 {
+                                    藥局 = 藥局,
                                     住院號 = reader["UDCASENO"].ToString().Trim(),
                                     序號 = reader["UDORDSEQ"].ToString().Trim(),
-                                    狀態 = reader["UDSTATUS"].ToString().Trim(),
-                                    開始日期 = reader["UDBGNDT2"].ToString().Trim(),
-                                    開始時間 = reader["UDBGNTM"].ToString().Trim(),
-                                    結束日期 = reader["UDENDDT2"].ToString().Trim(),
-                                    結束時間 = reader["UDENDTM"].ToString().Trim(),
+                                    狀態 = reader["UDSTATUS"].ToString().Trim(),                                                                     
+                                    開始時間 = 開始日期時間.ToDateTimeString_6(),                                   
+                                    結束時間 = 結束日期時間.ToDateTimeString_6(),
                                     藥碼 = reader["UDDRGNO"].ToString().Trim(),
                                     頻次代碼 = reader["UDFREQN"].ToString().Trim(),
                                     頻次屬性 = reader["UDFRQATR"].ToString().Trim(),
@@ -408,74 +418,74 @@ namespace DB2VM_API.Controller.API_SP
                         }
                     }
                 }
-            return prescription;
+                return prescription;
             }
         }
-        private List<medCpoeClass> ExecuteUDPDPCTL(string caseno, string startDay, string endDay)
-        {
-            DB2Connection MyDb2Connection = GetDB2Connection();
-            MyDb2Connection.Open();
+        //private List<medCpoeClass> ExecuteUDPDPCTL(string caseno, string startDay, string endDay)
+        //{
+        //    DB2Connection MyDb2Connection = GetDB2Connection();
+        //    MyDb2Connection.Open();
             
-            string 住院號 = caseno;
-            string startTime = "0000";
-            string endTime = "2359";
-            string procName = $"{DB2_schema}.UDPDPCTL";
-            DB2Command cmd = MyDb2Connection.CreateCommand();
-            cmd.CommandType = CommandType.StoredProcedure;
-            cmd.CommandText = procName;
-            cmd.Parameters.Add("@TCASENO", DB2Type.VarChar, 8).Value = 住院號;
-            cmd.Parameters.Add("@BGNDATE", DB2Type.VarChar, 8).Value = startDay;
-            cmd.Parameters.Add("@BGNTIME", DB2Type.VarChar, 4).Value = startTime;
-            cmd.Parameters.Add("@ENDDATE", DB2Type.VarChar, 8).Value = endDay;
-            cmd.Parameters.Add("@ENDTIME", DB2Type.VarChar, 4).Value = endTime;
-            DB2Parameter RET = cmd.Parameters.Add("@RET", DB2Type.Integer);
-            var reader = cmd.ExecuteReader();
-            List<medCpoeClass> prescription = new List<medCpoeClass>();
-            while (reader.Read())
-            {
-                medCpoeClass medCpoeClass = new medCpoeClass
-                {
-                    住院號 = reader["UDCASENO"].ToString().Trim(),
-                    序號 = reader["UDORDSEQ"].ToString().Trim(),
-                    狀態 = reader["UDSTATUS"].ToString().Trim(),
-                    開始日期 = reader["UDBGNDT2"].ToString().Trim(),
-                    開始時間 = reader["UDBGNTM"].ToString().Trim(),
-                    結束日期 = reader["UDENDDT2"].ToString().Trim(),
-                    結束時間 = reader["UDENDTM"].ToString().Trim(),
-                    藥碼 = reader["UDDRGNO"].ToString().Trim(),
-                    頻次代碼 = reader["UDFREQN"].ToString().Trim(),
-                    頻次屬性 = reader["UDFRQATR"].ToString().Trim(),
-                    藥品名 = reader["UDDRGNAM"].ToString().Trim(),
-                    途徑 = reader["UDROUTE"].ToString().Trim(),
-                    數量 = reader["UDLQNTY"].ToString().Trim(),
-                    劑量 = reader["UDDOSAGE"].ToString().Trim(),
-                    單位 = reader["UDDUNIT"].ToString().Trim(),
-                    期限 = reader["UDDURAT"].ToString().Trim(),
-                    自動包藥機 = reader["UDDSPMF"].ToString().Trim(),
-                    化癌分類 = reader["UDCHEMO"].ToString().Trim(),
-                    自購 = reader["UDSELF"].ToString().Trim(),
-                    血液製劑註記 = reader["UDALBUMI"].ToString().Trim(),
-                    處方醫師 = reader["UDORSIGN"].ToString().Trim(),
-                    處方醫師姓名 = reader["UDSIGNAM"].ToString().Trim(),
-                    操作人員 = reader["UDLUSER"].ToString().Trim(),
-                    藥局代碼 = reader["UDLRXID"].ToString().Trim(),
-                    大瓶點滴 = reader["UDCNT02"].ToString().Trim(),
-                    LKFLAG = reader["UDBRFNM"].ToString().Trim(),
-                    排序 = reader["UDRANK"].ToString().Trim(),
-                    判讀藥師代碼 = reader["PHARNUM"].ToString().Trim(),
-                    判讀FLAG = reader["FLAG"].ToString().Trim(),
-                    勿磨 = reader["UDNGT"].ToString().Trim(),
-                    抗生素等級 = reader["UDANTICG"].ToString().Trim(),
-                    重複用藥 = reader["UDSAMEDG"].ToString().Trim(),
-                    配藥天數 = reader["UDDSPDY"].ToString().Trim(),
-                    交互作用 = reader["UDDDI"].ToString().Trim(),
-                    交互作用等級 = reader["UDDDIC"].ToString().Trim()
-                };
-                prescription.Add(medCpoeClass);
-            }
-            cmd.Dispose();
-            MyDb2Connection.Close();
-            return prescription;
-        }
+        //    string 住院號 = caseno;
+        //    string startTime = "0000";
+        //    string endTime = "2359";
+        //    string procName = $"{DB2_schema}.UDPDPCTL";
+        //    DB2Command cmd = MyDb2Connection.CreateCommand();
+        //    cmd.CommandType = CommandType.StoredProcedure;
+        //    cmd.CommandText = procName;
+        //    cmd.Parameters.Add("@TCASENO", DB2Type.VarChar, 8).Value = 住院號;
+        //    cmd.Parameters.Add("@BGNDATE", DB2Type.VarChar, 8).Value = startDay;
+        //    cmd.Parameters.Add("@BGNTIME", DB2Type.VarChar, 4).Value = startTime;
+        //    cmd.Parameters.Add("@ENDDATE", DB2Type.VarChar, 8).Value = endDay;
+        //    cmd.Parameters.Add("@ENDTIME", DB2Type.VarChar, 4).Value = endTime;
+        //    DB2Parameter RET = cmd.Parameters.Add("@RET", DB2Type.Integer);
+        //    var reader = cmd.ExecuteReader();
+        //    List<medCpoeClass> prescription = new List<medCpoeClass>();
+        //    while (reader.Read())
+        //    {
+        //        medCpoeClass medCpoeClass = new medCpoeClass
+        //        {
+        //            住院號 = reader["UDCASENO"].ToString().Trim(),
+        //            序號 = reader["UDORDSEQ"].ToString().Trim(),
+        //            狀態 = reader["UDSTATUS"].ToString().Trim(),
+        //            開始日期 = reader["UDBGNDT2"].ToString().Trim(),
+        //            開始時間 = reader["UDBGNTM"].ToString().Trim(),
+        //            結束日期 = reader["UDENDDT2"].ToString().Trim(),
+        //            結束時間 = reader["UDENDTM"].ToString().Trim(),
+        //            藥碼 = reader["UDDRGNO"].ToString().Trim(),
+        //            頻次代碼 = reader["UDFREQN"].ToString().Trim(),
+        //            頻次屬性 = reader["UDFRQATR"].ToString().Trim(),
+        //            藥品名 = reader["UDDRGNAM"].ToString().Trim(),
+        //            途徑 = reader["UDROUTE"].ToString().Trim(),
+        //            數量 = reader["UDLQNTY"].ToString().Trim(),
+        //            劑量 = reader["UDDOSAGE"].ToString().Trim(),
+        //            單位 = reader["UDDUNIT"].ToString().Trim(),
+        //            期限 = reader["UDDURAT"].ToString().Trim(),
+        //            自動包藥機 = reader["UDDSPMF"].ToString().Trim(),
+        //            化癌分類 = reader["UDCHEMO"].ToString().Trim(),
+        //            自購 = reader["UDSELF"].ToString().Trim(),
+        //            血液製劑註記 = reader["UDALBUMI"].ToString().Trim(),
+        //            處方醫師 = reader["UDORSIGN"].ToString().Trim(),
+        //            處方醫師姓名 = reader["UDSIGNAM"].ToString().Trim(),
+        //            操作人員 = reader["UDLUSER"].ToString().Trim(),
+        //            藥局代碼 = reader["UDLRXID"].ToString().Trim(),
+        //            大瓶點滴 = reader["UDCNT02"].ToString().Trim(),
+        //            LKFLAG = reader["UDBRFNM"].ToString().Trim(),
+        //            排序 = reader["UDRANK"].ToString().Trim(),
+        //            判讀藥師代碼 = reader["PHARNUM"].ToString().Trim(),
+        //            判讀FLAG = reader["FLAG"].ToString().Trim(),
+        //            勿磨 = reader["UDNGT"].ToString().Trim(),
+        //            抗生素等級 = reader["UDANTICG"].ToString().Trim(),
+        //            重複用藥 = reader["UDSAMEDG"].ToString().Trim(),
+        //            配藥天數 = reader["UDDSPDY"].ToString().Trim(),
+        //            交互作用 = reader["UDDDI"].ToString().Trim(),
+        //            交互作用等級 = reader["UDDDIC"].ToString().Trim()
+        //        };
+        //        prescription.Add(medCpoeClass);
+        //    }
+        //    cmd.Dispose();
+        //    MyDb2Connection.Close();
+        //    return prescription;
+        //}
     }
 }
