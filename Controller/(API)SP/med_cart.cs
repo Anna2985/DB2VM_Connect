@@ -307,7 +307,7 @@ namespace DB2VM_API.Controller.API_SP
                                     if (key == "PBIRTH8") medCarInfoClass.出生日期 = value;
                                     if (key == "PSECTC") medCarInfoClass.科別 = value;
                                     if (key == "PFINC") medCarInfoClass.財務 = value;
-                                    if (key == "PADMDT") medCarInfoClass.入院日期 = value;
+                                    if (key == "PADMDT") medCarInfoClass.入院日期 = value.ToDateString();
                                     if (key == "PVSDNO") medCarInfoClass.訪視號碼 = value;
                                     if (key == "PVSNAM") medCarInfoClass.診所名稱 = value;
                                     if (key == "PRNAM") medCarInfoClass.醫生姓名 = value;
@@ -324,6 +324,7 @@ namespace DB2VM_API.Controller.API_SP
                                     if (key == "HICDTX4") medCarInfoClass.疾病說明4 = value;
                                     if (key == "NGTUBE") medCarInfoClass.鼻胃管使用狀況 = value;
                                     if (key == "TUBE") medCarInfoClass.其他管路使用狀況 = value;
+                                    if (key == "HAllERGY") medCarInfoClass.過敏史 = value;
                                     if (key == "RTALB") medCarInfoClass.白蛋白 = value;
                                     if (key == "RTCREA") medCarInfoClass.肌酸酐 = value;
                                     if (key == "RTEGFRM") medCarInfoClass.估算腎小球過濾率 = value;
