@@ -163,8 +163,8 @@ namespace DB2VM_API.Controller.API_SP
             List<medCarInfoClass> medCarInfoClassList = new List<medCarInfoClass>();
             medCarInfoClass v1 = new medCarInfoClass 
             {
-                病歷號 = "",
-                住院號 = ""
+                病歷號 = "9394632",
+                住院號 = "31620090"
             };
             medCarInfoClassList.Add(v1);
             List<medCarInfoClass> medCarInfoClasses = ExecuteUDPDPPF0(medCarInfoClassList);
@@ -183,8 +183,9 @@ namespace DB2VM_API.Controller.API_SP
             List<medCarInfoClass> medCarInfoClassList = new List<medCarInfoClass>();            
             medCarInfoClass v1 = new medCarInfoClass
             {
-                護理站 = "",
-                住院號 = ""
+                藥局 = "UC02",
+                護理站 = "C079",
+                住院號 = "31695645"
             };
             medCarInfoClassList.Add(v1);
             List<medCpoeClass> medCarInfoClasses = ExecuteUDPDPDSP(medCarInfoClassList);
@@ -307,7 +308,7 @@ namespace DB2VM_API.Controller.API_SP
                                     if (key == "PBIRTH8") medCarInfoClass.出生日期 = value;
                                     if (key == "PSECTC") medCarInfoClass.科別 = value;
                                     if (key == "PFINC") medCarInfoClass.財務 = value;
-                                    if (key == "PADMDT") medCarInfoClass.入院日期 = value.ToDateString();
+                                    if (key == "PADMDT") medCarInfoClass.入院日期 = value;
                                     if (key == "PVSDNO") medCarInfoClass.訪視號碼 = value;
                                     if (key == "PVSNAM") medCarInfoClass.診所名稱 = value;
                                     if (key == "PRNAM") medCarInfoClass.醫生姓名 = value;
@@ -356,7 +357,7 @@ namespace DB2VM_API.Controller.API_SP
                 {
                     if (medCarInfoClass.住院號.StringIsEmpty()) continue;
                     string time = DateTime.Now.ToString("HHmm");
-                    string 藥局 = medCarInfoClass.藥局;
+                    
                     using (DB2Command cmd = MyDb2Connection.CreateCommand())
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
@@ -375,11 +376,12 @@ namespace DB2VM_API.Controller.API_SP
                                 DateTime 開始日期時間 = DateTime.ParseExact(日期時間, "yyyy-MM-dd HH:mm:ss", null);
                                 string 結束日期 = reader["UDENDDT2"].ToString().Trim();
                                 string 結束時間 = reader["UDENDTM"].ToString().Trim();
-                                日期時間 = $"{開始日期} {開始時間.Substring(0, 2)}:{開始時間.Substring(2, 2)}:00";
+                                日期時間 = $"{結束日期} {結束時間.Substring(0, 2)}:{結束時間.Substring(2, 2)}:00";
                                 DateTime 結束日期時間 = DateTime.ParseExact(日期時間, "yyyy-MM-dd HH:mm:ss", null);
                                 medCpoeClass medCpoeClass = new medCpoeClass
                                 {
-                                    藥局 = 藥局,
+                                    藥局 = medCarInfoClass.藥局,
+                                    護理站 = medCarInfoClass.護理站,
                                     住院號 = reader["UDCASENO"].ToString().Trim(),
                                     序號 = reader["UDORDSEQ"].ToString().Trim(),
                                     狀態 = reader["UDSTATUS"].ToString().Trim(),                                                                     
