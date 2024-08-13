@@ -182,52 +182,6 @@ namespace DB2VM_API.Controller.API_SP
                 return returnData.JsonSerializationt(true);
             }
         }
-        //[HttpPost("get_controlMed_by_patient")]
-        //public string get_controlMed_by_patient([FromBody] returnData returnData)
-        //{
-        //    MyTimerBasic myTimerBasic = new MyTimerBasic();
-        //    try
-        //    {
-        //        if (returnData.ValueAry == null)
-        //        {
-        //            returnData.Code = -200;
-        //            returnData.Result = $"returnData.ValueAry 無傳入資料";
-        //            return returnData.JsonSerializationt(true);
-        //        }
-        //        if (returnData.ValueAry.Count != 5)
-        //        {
-        //            returnData.Code = -200;
-        //            returnData.Result = $"returnData.ValueAry 內容應為[藥局, 護理站, 床號, 開始日期, 結束日期]";
-        //            return returnData.JsonSerializationt(true);
-        //        }
-        //        List<ServerSettingClass> serverSettingClasses = ServerSettingClassMethod.WebApiGet($"{API_Server}");
-        //        serverSettingClasses = serverSettingClasses.MyFind("Main", "網頁", "VM端");
-        //        string Server = serverSettingClasses[0].Server;
-        //        string API = $"http://{Server}:4436";
-        //        string 藥局 = returnData.ValueAry[0];
-        //        string 護理站 = returnData.ValueAry[1];
-        //        string 床號 = returnData.ValueAry[2];
-        //        string 開始日期 = returnData.ValueAry[3];
-        //        string 結束日期 = returnData.ValueAry[4];
-        //        List<medCarInfoClass> get_patient = medCarInfoClass.get_patient_by_bedNum(API, returnData.ValueAry);
-        //        string 住院號 = get_patient[0].住院號;
-        //        List<medCpoeClass> controlMed = ExecuteUDPDPCTL(住院號, 開始日期, 結束日期);
-        //        get_patient[0].管制藥 = controlMed;
-        //        List<medCarInfoClass> update_bedList = medCarInfoClass.update_bed_list(API, get_patient);
-        //        var target = update_bedList.FirstOrDefault(temp => temp.藥局 == 藥局 && temp.護理站 == 護理站 && temp.床號 == 床號);
-        //        returnData.Code = 200;
-        //        returnData.TimeTaken = $"{myTimerBasic}";
-        //        returnData.Data = update_bedList;
-        //        returnData.Result = $"取得{藥局} {護理站} 第{床號}床的管制藥";
-        //        return returnData.JsonSerializationt(true);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        returnData.Code = -200;
-        //        returnData.Result = $"Exception:{ex.Message}";
-        //        return returnData.JsonSerializationt(true);
-        //    }
-        //}
 
         [HttpGet("UDPDPPF1")]
         public string UDPDPPF1()
@@ -399,7 +353,8 @@ namespace DB2VM_API.Controller.API_SP
                                     if (key == "PSECTC") medCarInfoClass.科別 = value;
                                     if (key == "PFINC") medCarInfoClass.財務 = value;
                                     if (key == "PADMDT") medCarInfoClass.入院日期 = value;
-                                    if (key == "PVSDNO") medCarInfoClass.訪視號碼 = value;
+                                    if (key == "PVSDNO") medCarInfoClass.主治醫師代碼 = value;
+                                    if (key == "PRDNO") medCarInfoClass.住院醫師代碼 = value;
                                     if (key == "PVSNAM") medCarInfoClass.診所名稱 = value;
                                     if (key == "PRNAM") medCarInfoClass.醫生姓名 = value;
                                     if (key == "PBHIGHT") medCarInfoClass.身高 = value;
