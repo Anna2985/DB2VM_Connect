@@ -92,6 +92,96 @@ namespace DB2VM_API.Controller.API_SP
                 return returnData.JsonSerializationt(true);
             }
         }
+        [HttpPost("check_dispense")]
+        public string check_dispense([FromBody] returnData returnData)
+        {
+            MyTimerBasic myTimerBasic = new MyTimerBasic();
+            try
+            {
+                List<ServerSettingClass> serverSettingClasses = ServerSettingClassMethod.WebApiGet($"{API_Server}");
+                serverSettingClasses = serverSettingClasses.MyFind("Main", "網頁", "VM端");
+                string Server = serverSettingClasses[0].Server;
+
+                List<medCpoeClass> input_medCpoe = returnData.Data.ObjToClass<List<medCpoeClass>>();
+
+                if (input_medCpoe == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"傳入Data資料異常";
+                    return returnData.JsonSerializationt();
+                }
+                string 藥局 = input_medCpoe[0].藥局;
+                string 護理站 = input_medCpoe[0].護理站;
+                string 床號 = input_medCpoe[0].床號;
+                List<string> valueAry = new List<string> { 藥局, 護理站, 床號 };
+                if (returnData.ValueAry == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"returnData.ValueAry 無傳入資料";
+                    return returnData.JsonSerializationt(true);
+                }              
+                
+                string API = $"http://{Server}:4436";
+
+                List<medCarInfoClass> targetPatient = medCarInfoClass.get_patient_by_bedNum(API, valueAry);
+                string Master_GUID = targetPatient[0].GUID;
+                List<medCpoeClass> medCpoeClasses = medCpoeClass.check_dispense(API, Master_GUID, returnData.ValueAry);
+
+                returnData.Code = 200;
+                returnData.TimeTaken = $"{myTimerBasic}";
+                returnData.Data = medCpoeClasses;
+                returnData.Result = $"更新處方資料表成功";
+                return returnData.JsonSerializationt(true);
+            }
+            catch(Exception ex)
+            {
+                returnData.Code = -200;
+                returnData.Result = $"Exception:{ex.Message}";
+                return returnData.JsonSerializationt(true);
+            }
+        }
+        [HttpPost("get_med_qty")]
+        public string get_med_qty([FromBody] returnData returnData)
+        {
+            MyTimerBasic myTimerBasic = new MyTimerBasic();
+            try
+            {
+                if (returnData.ValueAry == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"returnData.ValueAry 無傳入資料";
+                    return returnData.JsonSerializationt(true);
+                }
+                if (returnData.ValueAry.Count != 2)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"returnData.ValueAry 內容應為[藥局, 護理站]";
+                    return returnData.JsonSerializationt(true);
+                }
+                
+                List<ServerSettingClass> serverSettingClasses = ServerSettingClassMethod.WebApiGet($"{API_Server}");
+                serverSettingClasses = serverSettingClasses.MyFind("Main", "網頁", "VM端");
+                string Server = serverSettingClasses[0].Server;
+                string API = $"http://{Server}:4436";
+                string 藥局 = returnData.ValueAry[0];
+                string 護理站 = returnData.ValueAry[1];
+
+                List<medQtyClass> medQtyClasses = medCpoeClass.get_med_qty(API, returnData.ValueAry);
+
+                returnData.Code = 200;
+                returnData.TimeTaken = $"{myTimerBasic}";
+                returnData.Data = medQtyClasses;
+                returnData.Result = $"取得{藥局} {護理站}藥品總量";
+                return returnData.JsonSerializationt(true);
+
+            }
+            catch(Exception ex)
+            {
+                returnData.Code = -200;
+                returnData.Result = $"Exception:{ex.Message}";
+                return returnData.JsonSerializationt(true);
+            }
+        }
         //[HttpPost("get_controlMed_by_patient")]
         //public string get_controlMed_by_patient([FromBody] returnData returnData)
         //{
@@ -382,6 +472,7 @@ namespace DB2VM_API.Controller.API_SP
                                 {
                                     藥局 = medCarInfoClass.藥局,
                                     護理站 = medCarInfoClass.護理站,
+                                    床號 = medCarInfoClass.床號,
                                     住院號 = reader["UDCASENO"].ToString().Trim(),
                                     序號 = reader["UDORDSEQ"].ToString().Trim(),
                                     狀態 = reader["UDSTATUS"].ToString().Trim(),                                                                     
