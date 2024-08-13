@@ -82,7 +82,7 @@ namespace DB2VM_API.Controller.API_SP
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
                 returnData.Data = update_medCarInfoClass;
-                returnData.Result = $"取得 {護理站} 病床資訊共{update_medCarInfoClass.Count}/{bedListCpoe.Count}筆";
+                returnData.Result = $"取得 {護理站} 病床資訊共{update_medCarInfoClass.Count}/{bedListInfo.Count}筆";
                 return returnData.JsonSerializationt(true);
             }
             catch(Exception ex)
