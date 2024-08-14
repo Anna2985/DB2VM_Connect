@@ -85,61 +85,14 @@ namespace DB2VM_API.Controller.API_SP
                 returnData.Result = $"取得 {護理站} 病床資訊共{update_medCarInfoClass.Count}/{bedListInfo.Count}筆";
                 return returnData.JsonSerializationt(true);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 returnData.Code = -200;
                 returnData.Result = $"Exception:{ex.Message}";
                 return returnData.JsonSerializationt(true);
             }
         }
-        [HttpPost("check_dispense")]
-        public string check_dispense([FromBody] returnData returnData)
-        {
-            MyTimerBasic myTimerBasic = new MyTimerBasic();
-            try
-            {
-                List<ServerSettingClass> serverSettingClasses = ServerSettingClassMethod.WebApiGet($"{API_Server}");
-                serverSettingClasses = serverSettingClasses.MyFind("Main", "網頁", "VM端");
-                string Server = serverSettingClasses[0].Server;
 
-                List<medCpoeClass> input_medCpoe = returnData.Data.ObjToClass<List<medCpoeClass>>();
-
-                if (input_medCpoe == null)
-                {
-                    returnData.Code = -200;
-                    returnData.Result = $"傳入Data資料異常";
-                    return returnData.JsonSerializationt();
-                }
-                string 藥局 = input_medCpoe[0].藥局;
-                string 護理站 = input_medCpoe[0].護理站;
-                string 床號 = input_medCpoe[0].床號;
-                List<string> valueAry = new List<string> { 藥局, 護理站, 床號 };
-                if (returnData.ValueAry == null)
-                {
-                    returnData.Code = -200;
-                    returnData.Result = $"returnData.ValueAry 無傳入資料";
-                    return returnData.JsonSerializationt(true);
-                }              
-                
-                string API = $"http://{Server}:4436";
-
-                List<medCarInfoClass> targetPatient = medCarInfoClass.get_patient_by_bedNum(API, valueAry);
-                string Master_GUID = targetPatient[0].GUID;
-                List<medCpoeClass> medCpoeClasses = medCpoeClass.check_dispense(API, Master_GUID, returnData.ValueAry);
-
-                returnData.Code = 200;
-                returnData.TimeTaken = $"{myTimerBasic}";
-                returnData.Data = medCpoeClasses;
-                returnData.Result = $"更新處方資料表成功";
-                return returnData.JsonSerializationt(true);
-            }
-            catch(Exception ex)
-            {
-                returnData.Code = -200;
-                returnData.Result = $"Exception:{ex.Message}";
-                return returnData.JsonSerializationt(true);
-            }
-        }
         [HttpPost("get_med_qty")]
         public string get_med_qty([FromBody] returnData returnData)
         {
@@ -158,7 +111,7 @@ namespace DB2VM_API.Controller.API_SP
                     returnData.Result = $"returnData.ValueAry 內容應為[藥局, 護理站]";
                     return returnData.JsonSerializationt(true);
                 }
-                
+
                 List<ServerSettingClass> serverSettingClasses = ServerSettingClassMethod.WebApiGet($"{API_Server}");
                 serverSettingClasses = serverSettingClasses.MyFind("Main", "網頁", "VM端");
                 string Server = serverSettingClasses[0].Server;
@@ -175,7 +128,7 @@ namespace DB2VM_API.Controller.API_SP
                 return returnData.JsonSerializationt(true);
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 returnData.Code = -200;
                 returnData.Result = $"Exception:{ex.Message}";
@@ -205,7 +158,7 @@ namespace DB2VM_API.Controller.API_SP
             MyTimerBasic myTimerBasic = new MyTimerBasic();
             returnData returnData = new returnData();
             List<medCarInfoClass> medCarInfoClassList = new List<medCarInfoClass>();
-            medCarInfoClass v1 = new medCarInfoClass 
+            medCarInfoClass v1 = new medCarInfoClass
             {
                 病歷號 = "9394632",
                 住院號 = "31620090"
@@ -224,7 +177,7 @@ namespace DB2VM_API.Controller.API_SP
         {
             MyTimerBasic myTimerBasic = new MyTimerBasic();
             returnData returnData = new returnData();
-            List<medCarInfoClass> medCarInfoClassList = new List<medCarInfoClass>();            
+            List<medCarInfoClass> medCarInfoClassList = new List<medCarInfoClass>();
             medCarInfoClass v1 = new medCarInfoClass
             {
                 藥局 = "UC02",
@@ -284,7 +237,7 @@ namespace DB2VM_API.Controller.API_SP
                     cmd.Parameters.Add("@TNURSTA", DB2Type.VarChar, 4).Value = hnursta;
                     DB2Parameter RET = cmd.Parameters.Add("@RET", DB2Type.Integer);
                     DB2Parameter RETMSG = cmd.Parameters.Add("@RETMSG", DB2Type.VarChar, 60);
-                    using(DB2DataReader reader = cmd.ExecuteReader())
+                    using (DB2DataReader reader = cmd.ExecuteReader())
                     {
                         List<medCarInfoClass> medCarInfoClasses = new List<medCarInfoClass>();
                         while (reader.Read())
@@ -307,7 +260,7 @@ namespace DB2VM_API.Controller.API_SP
                         return medCarInfoClasses;
                     }
                 }
-            }                       
+            }
         }
         private List<medCarInfoClass> ExecuteUDPDPPF0(List<medCarInfoClass> medCarInfoClasses)
         {
@@ -316,10 +269,10 @@ namespace DB2VM_API.Controller.API_SP
                 MyDb2Connection.Open();
                 string SP = "UDPDPPF0";
                 string procName = $"{DB2_schema}.{SP}";
-                foreach(var medCarInfoClass in medCarInfoClasses)
+                foreach (var medCarInfoClass in medCarInfoClasses)
                 {
                     if (medCarInfoClass.住院號.StringIsEmpty()) continue;
-                    using(DB2Command cmd = MyDb2Connection.CreateCommand())
+                    using (DB2Command cmd = MyDb2Connection.CreateCommand())
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.CommandText = procName;
@@ -340,7 +293,7 @@ namespace DB2VM_API.Controller.API_SP
                                 results.Add(row);
                             }
 
-                           
+
 
                             foreach (var row in results)
                             {
@@ -384,16 +337,16 @@ namespace DB2VM_API.Controller.API_SP
                                     if (key == "RTPLT") medCarInfoClass.血小板 = value;
                                     if (key == "RTINR") medCarInfoClass.國際標準化比率 = value;
                                 }
-                            }                        
-                        }                     
+                            }
+                        }
                     }
                 }
                 return medCarInfoClasses;
-            }                     
+            }
         }
         private List<medCpoeClass> ExecuteUDPDPDSP(List<medCarInfoClass> medCarInfoClasses)
         {
-            using(DB2Connection MyDb2Connection = GetDB2Connection())
+            using (DB2Connection MyDb2Connection = GetDB2Connection())
             {
                 MyDb2Connection.Open();
                 string procName = $"{DB2_schema}.UDPDPDSP";
@@ -402,7 +355,7 @@ namespace DB2VM_API.Controller.API_SP
                 {
                     if (medCarInfoClass.住院號.StringIsEmpty()) continue;
                     string time = DateTime.Now.ToString("HHmm");
-                    
+
                     using (DB2Command cmd = MyDb2Connection.CreateCommand())
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
@@ -411,7 +364,7 @@ namespace DB2VM_API.Controller.API_SP
                         cmd.Parameters.Add("@TNURSTA", DB2Type.VarChar, 4).Value = medCarInfoClass.護理站;
                         cmd.Parameters.Add("@TTIME", DB2Type.VarChar, 4).Value = time;
                         DB2Parameter RET = cmd.Parameters.Add("@RET", DB2Type.Integer);
-                        using(DB2DataReader reader = cmd.ExecuteReader())
+                        using (DB2DataReader reader = cmd.ExecuteReader())
                         {
                             while (reader.Read())
                             {
@@ -430,8 +383,8 @@ namespace DB2VM_API.Controller.API_SP
                                     床號 = medCarInfoClass.床號,
                                     住院號 = reader["UDCASENO"].ToString().Trim(),
                                     序號 = reader["UDORDSEQ"].ToString().Trim(),
-                                    狀態 = reader["UDSTATUS"].ToString().Trim(),                                                                     
-                                    開始時間 = 開始日期時間.ToDateTimeString_6(),                                   
+                                    狀態 = reader["UDSTATUS"].ToString().Trim(),
+                                    開始時間 = 開始日期時間.ToDateTimeString_6(),
                                     結束時間 = 結束日期時間.ToDateTimeString_6(),
                                     藥碼 = reader["UDDRGNO"].ToString().Trim(),
                                     頻次代碼 = reader["UDFREQN"].ToString().Trim(),
@@ -469,12 +422,44 @@ namespace DB2VM_API.Controller.API_SP
                 }
                 return prescription;
             }
+           
+        }
+        private List<medCpoeClass> ExcuteUDPDPHLP(List<string> CODE )
+        {
+            using (DB2Connection MyDb2Connection = GetDB2Connection())
+            {
+                MyDb2Connection.Open();
+                string procName = $"{DB2_schema}.UDPDPHLP";
+                foreach (var code in CODE)
+                {
+                    using (DB2Command cmd = MyDb2Connection.CreateCommand())
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.CommandText = procName;
+                        cmd.Parameters.Add("@UDDRGNO", DB2Type.VarChar, 5).Value = code;
+                        DB2Parameter RET = cmd.Parameters.Add("@RET", DB2Type.Integer);
+                        DB2Parameter RETMSG = cmd.Parameters.Add("@RETMSG", DB2Type.VarChar, 60);
+                        using (DB2DataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+
+                            }
+                        }
+                    }
+
+
+            }
+
+
+
+
         }
         //private List<medCpoeClass> ExecuteUDPDPCTL(string caseno, string startDay, string endDay)
         //{
         //    DB2Connection MyDb2Connection = GetDB2Connection();
         //    MyDb2Connection.Open();
-            
+
         //    string 住院號 = caseno;
         //    string startTime = "0000";
         //    string endTime = "2359";
@@ -534,7 +519,7 @@ namespace DB2VM_API.Controller.API_SP
         //    }
         //    cmd.Dispose();
         //    MyDb2Connection.Close();
-        //    return prescription;
-        //}
+        //return "";
+    }
     }
 }
