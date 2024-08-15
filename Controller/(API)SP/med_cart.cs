@@ -56,13 +56,21 @@ namespace DB2VM_API.Controller.API_SP
 
                 List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(bedListInfo);
 
-                List<string> medcode = bedListCpoe
-                    .GroupBy(med => med.藥碼)
+                List<string> medCode = bedListCpoe
+                    .GroupBy(code => code.藥碼)
                     .Select(group => group.Key)
                     .ToList();
-                string medcodeString = string.Join(",", medcode);
-                
 
+                List<string> inputMedCode = new List<string> { string.Join(",", medCode) };
+                List<medClass> medClasses = medCpoeClass.get_med_clouds_by_codes(API, inputMedCode);
+                var medDict = medClasses.ToDictionary(med => med.藥品碼, med => med.中文名稱);
+                foreach (var cpoe in bedListCpoe)
+                {
+                    if (medDict.TryGetValue(cpoe.藥碼, out string medName))
+                    {
+                        cpoe.中文名 = medName;
+                    }
+                }
 
                 List<string> valueAry = new List<string> { 藥局, 護理站 };
 
