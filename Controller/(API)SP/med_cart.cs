@@ -446,7 +446,8 @@ namespace DB2VM_API.Controller.API_SP
                                 姓名 = reader["PNAMEC"].ToString().Trim()                              
                                 //占床狀態 = reader["HBEDSTAT"].ToString().Trim() == "O" ? "已佔床" : ""
                             };
-                            if (medCarInfoClass.姓名 != null) medCarInfoClass.占床狀態 = "已佔床";
+                            //if (medCarInfoClass.姓名 != null) medCarInfoClass.占床狀態 = "已佔床";
+                            if (!string.IsNullOrWhiteSpace(medCarInfoClass.姓名)) medCarInfoClass.占床狀態 = "已佔床";
                             medCarInfoClasses.Add(medCarInfoClass);
                         }
                         return medCarInfoClasses;
@@ -494,13 +495,14 @@ namespace DB2VM_API.Controller.API_SP
                                     string key = row["UDPDPSY"].ToString().Trim();
                                     string value = row["UDPDPVL"].ToString().Trim();
                                     if (key == "HSEXC") medCarInfoClass.性別 = value;
+                                    if (key == "PBIRTH8") medCarInfoClass.出生日期 = value;
                                     if (key == "PSECTC") medCarInfoClass.科別 = value;
                                     if (key == "PFINC") medCarInfoClass.財務 = value;
                                     if (key == "PADMDT") medCarInfoClass.入院日期 = value;
                                     if (key == "PVSDNO") medCarInfoClass.主治醫師代碼 = value;
                                     if (key == "PRDNO") medCarInfoClass.住院醫師代碼 = value;
-                                    if (key == "PVSNAM") medCarInfoClass.主治醫師 = value;
-                                    if (key == "PRNAM") medCarInfoClass.住院醫師 = value;
+                                    //if (key == "PVSNAM") medCarInfoClass.診所名稱 = value;
+                                    //if (key == "PRNAM") medCarInfoClass.醫生姓名 = value;
                                     if (key == "PBHIGHT") medCarInfoClass.身高 = value;
                                     if (key == "PBWEIGHT") medCarInfoClass.體重 = value;
                                     if (key == "PBBSA") medCarInfoClass.體表面積 = value;
@@ -527,62 +529,8 @@ namespace DB2VM_API.Controller.API_SP
                                     if (key == "RTHGB") medCarInfoClass.血紅素 = value;
                                     if (key == "RTPLT") medCarInfoClass.血小板 = value;
                                     if (key == "RTINR") medCarInfoClass.國際標準化比率 = value;
-                                    if (key ==  "PBIRTH8") 
-                                    {
-                                        DateTime birthDate = value.StringToDateTime();
-                                        DateTime today = DateTime.Today;
-                                        int ageYears = today.Year - birthDate.Year;
-                                        int ageMonths = today.Month - birthDate.Month;
-                                        if (ageMonths < 0)
-                                        {
-                                            ageYears--;
-                                            ageMonths += 12;
-                                        }
-                                        if(today.Day < birthDate.Day)
-                                        {
-                                            ageMonths--;
-                                            if (ageMonths < 0)
-                                            {
-                                                ageYears--;
-                                                ageMonths += 12;
-                                            }
-                                        }
-                                        medCarInfoClass.年齡 = $"{ageYears}歲{ageMonths}月";
-                                        medCarInfoClass.出生日期 = value;
-                                    }
-                                    string 疾病代碼1 = "";
-                                    string 疾病代碼2 = "";
-                                    string 疾病代碼3 = "";
-                                    string 疾病代碼4 = "";
-                                    if (key == "HICD1") 疾病代碼1 = value;
-                                    if (key == "HICD2") 疾病代碼2 = value;
-                                    if (key == "HICD3") 疾病代碼3 = value;
-                                    if (key == "HICD4") 疾病代碼4 = value;
-                                    medCarInfoClass.疾病代碼 = string.Join(",", new[]
-                                    {
-                                        疾病代碼1,
-                                        疾病代碼2,
-                                        疾病代碼3,
-                                        疾病代碼4,
-                                    }.Where(x => !string.IsNullOrWhiteSpace(x)));
-
-                                    string 疾病1 = "";
-                                    string 疾病2 = "";
-                                    string 疾病3 = "";
-                                    string 疾病4 = "";
-                                    if (key == "HICDTX1") 疾病1 = value;
-                                    if (key == "HICDTX1") 疾病2 = value;
-                                    if (key == "HICDTX1") 疾病3 = value;
-                                    if (key == "HICDTX1") 疾病4 = value;
-                                    medCarInfoClass.疾病說明 = string.Join(",", new[]
-                                    {
-                                        疾病1,
-                                        疾病2,
-                                        疾病3,
-                                        疾病4,
-                                    }.Where(x => !string.IsNullOrWhiteSpace(x)));
-
                                 }
+                                    
                             }
                         }
                     }
