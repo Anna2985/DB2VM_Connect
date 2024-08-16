@@ -65,7 +65,15 @@ namespace DB2VM_API.Controller.API_SP
                 string 藥局 = returnData.ValueAry[0];
                 string 護理站 = returnData.ValueAry[1];
                 List<medCarInfoClass> bedList = ExecuteUDPDPPF1(藥局, 護理站);              
-                List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedList);
+                List<medCarInfoClass> bedListInfo = ExecuteUDPDPPF0(bedList);
+                List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(bedListInfo);
+
+                List<string> valueAry = new List<string> { 藥局, 護理站 };
+
+                //List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedList);
+                List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedListInfo);
+                List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe, valueAry);
+
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
                 returnData.Data = update_medCarInfoClass;
@@ -486,25 +494,24 @@ namespace DB2VM_API.Controller.API_SP
                                     string key = row["UDPDPSY"].ToString().Trim();
                                     string value = row["UDPDPVL"].ToString().Trim();
                                     if (key == "HSEXC") medCarInfoClass.性別 = value;
-                                    if (key == "PBIRTH8") medCarInfoClass.出生日期 = value;
                                     if (key == "PSECTC") medCarInfoClass.科別 = value;
                                     if (key == "PFINC") medCarInfoClass.財務 = value;
                                     if (key == "PADMDT") medCarInfoClass.入院日期 = value;
                                     if (key == "PVSDNO") medCarInfoClass.主治醫師代碼 = value;
                                     if (key == "PRDNO") medCarInfoClass.住院醫師代碼 = value;
-                                    if (key == "PVSNAM") medCarInfoClass.診所名稱 = value;
-                                    if (key == "PRNAM") medCarInfoClass.醫生姓名 = value;
+                                    if (key == "PVSNAM") medCarInfoClass.主治醫師 = value;
+                                    if (key == "PRNAM") medCarInfoClass.住院醫師 = value;
                                     if (key == "PBHIGHT") medCarInfoClass.身高 = value;
                                     if (key == "PBWEIGHT") medCarInfoClass.體重 = value;
                                     if (key == "PBBSA") medCarInfoClass.體表面積 = value;
-                                    if (key == "HICD1") medCarInfoClass.國際疾病分類代碼1 = value;
-                                    if (key == "HICDTX1") medCarInfoClass.疾病說明1 = value;
-                                    if (key == "HICD2") medCarInfoClass.國際疾病分類代碼2 = value;
-                                    if (key == "HICDTX2") medCarInfoClass.疾病說明2 = value;
-                                    if (key == "HICD3") medCarInfoClass.國際疾病分類代碼3 = value;
-                                    if (key == "HICDTX3") medCarInfoClass.疾病說明3 = value;
-                                    if (key == "HICD4") medCarInfoClass.國際疾病分類代碼4 = value;
-                                    if (key == "HICDTX4") medCarInfoClass.疾病說明4 = value;
+                                    //if (key == "HICD1") medCarInfoClass.國際疾病分類代碼1 = value;
+                                    //if (key == "HICDTX1") medCarInfoClass.疾病說明1 = value;
+                                    //if (key == "HICD2") medCarInfoClass.國際疾病分類代碼2 = value;
+                                    //if (key == "HICDTX2") medCarInfoClass.疾病說明2 = value;
+                                    //if (key == "HICD3") medCarInfoClass.國際疾病分類代碼3 = value;
+                                    //if (key == "HICDTX3") medCarInfoClass.疾病說明3 = value;
+                                    //if (key == "HICD4") medCarInfoClass.國際疾病分類代碼4 = value;
+                                    //if (key == "HICDTX4") medCarInfoClass.疾病說明4 = value;
                                     if (key == "NGTUBE") medCarInfoClass.鼻胃管使用狀況 = value;
                                     if (key == "TUBE") medCarInfoClass.其他管路使用狀況 = value;
                                     if (key == "HAllERGY") medCarInfoClass.過敏史 = value;
@@ -520,6 +527,61 @@ namespace DB2VM_API.Controller.API_SP
                                     if (key == "RTHGB") medCarInfoClass.血紅素 = value;
                                     if (key == "RTPLT") medCarInfoClass.血小板 = value;
                                     if (key == "RTINR") medCarInfoClass.國際標準化比率 = value;
+                                    if (key ==  "PBIRTH8") 
+                                    {
+                                        DateTime birthDate = value.StringToDateTime();
+                                        DateTime today = DateTime.Today;
+                                        int ageYears = today.Year - birthDate.Year;
+                                        int ageMonths = today.Month - birthDate.Month;
+                                        if (ageMonths < 0)
+                                        {
+                                            ageYears--;
+                                            ageMonths += 12;
+                                        }
+                                        if(today.Day < birthDate.Day)
+                                        {
+                                            ageMonths--;
+                                            if (ageMonths < 0)
+                                            {
+                                                ageYears--;
+                                                ageMonths += 12;
+                                            }
+                                        }
+                                        medCarInfoClass.年齡 = $"{ageYears}歲{ageMonths}月";
+                                        medCarInfoClass.出生日期 = value;
+                                    }
+                                    string 疾病代碼1 = "";
+                                    string 疾病代碼2 = "";
+                                    string 疾病代碼3 = "";
+                                    string 疾病代碼4 = "";
+                                    if (key == "HICD1") 疾病代碼1 = value;
+                                    if (key == "HICD2") 疾病代碼2 = value;
+                                    if (key == "HICD3") 疾病代碼3 = value;
+                                    if (key == "HICD4") 疾病代碼4 = value;
+                                    medCarInfoClass.疾病代碼 = string.Join(",", new[]
+                                    {
+                                        疾病代碼1,
+                                        疾病代碼2,
+                                        疾病代碼3,
+                                        疾病代碼4,
+                                    }.Where(x => !string.IsNullOrWhiteSpace(x)));
+
+                                    string 疾病1 = "";
+                                    string 疾病2 = "";
+                                    string 疾病3 = "";
+                                    string 疾病4 = "";
+                                    if (key == "HICDTX1") 疾病1 = value;
+                                    if (key == "HICDTX1") 疾病2 = value;
+                                    if (key == "HICDTX1") 疾病3 = value;
+                                    if (key == "HICDTX1") 疾病4 = value;
+                                    medCarInfoClass.疾病說明 = string.Join(",", new[]
+                                    {
+                                        疾病1,
+                                        疾病2,
+                                        疾病3,
+                                        疾病4,
+                                    }.Where(x => !string.IsNullOrWhiteSpace(x)));
+
                                 }
                             }
                         }
@@ -600,6 +662,17 @@ namespace DB2VM_API.Controller.API_SP
                                 };
                                 if (reader["UDSTATUS"].ToString().Trim() == "80") medCpoeClass.狀態 = "DC";
                                 if (reader["UDSTATUS"].ToString().Trim() == "30") medCpoeClass.狀態 = "New";
+                                if (medCpoeClass.藥局代碼 == "UB01") medCpoeClass.藥局名稱 = "中正樓總藥局";
+                                if (medCpoeClass.藥局代碼 == "UB18") medCpoeClass.藥局名稱 = "中正樓十三樓藥局";
+                                if (medCpoeClass.藥局代碼 == "UA05") medCpoeClass.藥局名稱 = "思源樓思源藥局";
+                                if (medCpoeClass.藥局代碼 == "ERS1") medCpoeClass.藥局名稱 = "中正樓急診藥局";
+                                if (medCpoeClass.藥局代碼 == "UBAA") medCpoeClass.藥局名稱 = "中正樓配方機藥局";
+                                if (medCpoeClass.藥局代碼 == "UATP") medCpoeClass.藥局名稱 = "中正樓TPN藥局";
+                                if (medCpoeClass.藥局代碼 == "EW01") medCpoeClass.藥局名稱 = "思源樓神經再生藥局";
+                                if (medCpoeClass.藥局代碼 == "UBTP") medCpoeClass.藥局名稱 = "中正樓臨床試驗藥局";
+                                if (medCpoeClass.藥局代碼 == "UC02") medCpoeClass.藥局名稱 = "長青樓藥局";
+
+
                                 prescription.Add(medCpoeClass);
                             }
                         }
