@@ -529,6 +529,8 @@ namespace DB2VM_API.Controller.API_SP
                                     if (key == "RTHGB") medCarInfoClass.血紅素 = value;
                                     if (key == "RTPLT") medCarInfoClass.血小板 = value;
                                     if (key == "RTINR") medCarInfoClass.國際標準化比率 = value;
+                                    if (key == "PBIRTH8")  string 出生日期 = value;
+
                                 }
                                     
                             }
