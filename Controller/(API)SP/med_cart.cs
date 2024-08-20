@@ -554,8 +554,8 @@ namespace DB2VM_API.Controller.API_SP
                                     if (key == "PADMDT") medCarInfoClass.入院日期 = value;
                                     if (key == "PVSDNO") medCarInfoClass.主治醫師代碼 = value;
                                     if (key == "PRDNO") medCarInfoClass.住院醫師代碼 = value;
-                                    //if (key == "PVSNAM") medCarInfoClass.診所名稱 = value;
-                                    //if (key == "PRNAM") medCarInfoClass.醫生姓名 = value;
+                                    if (key == "PVSNAM") medCarInfoClass.主治醫師 = value;
+                                    if (key == "PRNAM") medCarInfoClass.住院醫師 = value;
                                     if (key == "PBHIGHT") medCarInfoClass.身高 = value;
                                     if (key == "PBWEIGHT") medCarInfoClass.體重 = value;
                                     if (key == "PBBSA") medCarInfoClass.體表面積 = value;
