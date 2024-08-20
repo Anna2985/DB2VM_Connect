@@ -534,7 +534,7 @@ namespace DB2VM_API.Controller.API_SP
                                     if (key == "HICDTX4") diseaseClass.疾病說明4 = value;
                                 }
                             }
-                            (string 疾病代碼, string 疾病說明) = disease(diseaseClass);
+                            (string[] 疾病代碼, string[] 疾病說明) = disease(diseaseClass);
                             medCarInfoClass.疾病代碼 = 疾病代碼;
                             medCarInfoClass.疾病說明 = 疾病說明;
                         }
@@ -756,19 +756,20 @@ namespace DB2VM_API.Controller.API_SP
 
             return ages;
         }
-        private (string dieaseCode, string dieaseName) disease(diseaseClass diseaseClass)
+        private (string[] dieaseCode, string[] dieaseName) disease(diseaseClass diseaseClass)
         {
-            string dieaseCode = "";
-            if (!string.IsNullOrWhiteSpace(diseaseClass.國際疾病分類代碼1)) dieaseCode = diseaseClass.國際疾病分類代碼1;
-            if (!string.IsNullOrWhiteSpace(diseaseClass.國際疾病分類代碼2)) dieaseCode += $";{ diseaseClass.國際疾病分類代碼2}";
-            if (!string.IsNullOrWhiteSpace(diseaseClass.國際疾病分類代碼3)) dieaseCode += $";{ diseaseClass.國際疾病分類代碼3}";
-            if (!string.IsNullOrWhiteSpace(diseaseClass.國際疾病分類代碼4)) dieaseCode += $";{ diseaseClass.國際疾病分類代碼4}";
-            string dieaseName = "";
-            if (!string.IsNullOrWhiteSpace(diseaseClass.疾病說明1)) dieaseName = diseaseClass.疾病說明1;
-            if (!string.IsNullOrWhiteSpace(diseaseClass.疾病說明2)) dieaseCode += $";{ diseaseClass.疾病說明2}";
-            if (!string.IsNullOrWhiteSpace(diseaseClass.疾病說明3)) dieaseCode += $";{ diseaseClass.疾病說明3}";
-            if (!string.IsNullOrWhiteSpace(diseaseClass.疾病說明4)) dieaseCode += $";{ diseaseClass.疾病說明4}";
-            return (dieaseCode, dieaseName);
+            List<string> dieaseCode = new List<string>();
+            List<string> dieaseName = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(diseaseClass.國際疾病分類代碼1)) dieaseCode.Add(diseaseClass.國際疾病分類代碼1);
+            if (!string.IsNullOrWhiteSpace(diseaseClass.國際疾病分類代碼2)) dieaseCode.Add(diseaseClass.國際疾病分類代碼2);
+            if (!string.IsNullOrWhiteSpace(diseaseClass.國際疾病分類代碼3)) dieaseCode.Add(diseaseClass.國際疾病分類代碼3);
+            if (!string.IsNullOrWhiteSpace(diseaseClass.國際疾病分類代碼4)) dieaseCode.Add(diseaseClass.國際疾病分類代碼4);
+            if (!string.IsNullOrWhiteSpace(diseaseClass.疾病說明1)) dieaseName.Add(diseaseClass.疾病說明1);
+            if (!string.IsNullOrWhiteSpace(diseaseClass.疾病說明2)) dieaseName.Add(diseaseClass.疾病說明2);
+            if (!string.IsNullOrWhiteSpace(diseaseClass.疾病說明3)) dieaseName.Add(diseaseClass.疾病說明3);
+            if (!string.IsNullOrWhiteSpace(diseaseClass.疾病說明4)) dieaseName.Add(diseaseClass.疾病說明4);
+            return (dieaseCode.ToArray(), dieaseName.ToArray());
         }
     }   
 }
