@@ -590,6 +590,7 @@ namespace DB2VM_API.Controller.API_SP
                             (string 疾病代碼, string 疾病說明) = disease(diseaseClass);
                             medCarInfoClass.疾病代碼 = 疾病代碼;
                             medCarInfoClass.疾病說明 = 疾病說明;
+                            abnormal(medCarInfoClass);
                         }
                     }
                 }
@@ -824,5 +825,40 @@ namespace DB2VM_API.Controller.API_SP
             if (!string.IsNullOrWhiteSpace(diseaseClass.疾病說明4)) dieaseName += $";{diseaseClass.疾病說明4}";
             return (dieaseCode, dieaseName);
         }
-    }   
+        private medCarInfoClass abnormal(medCarInfoClass medCarInfoClasses)
+        {
+            List<string> abnormalList = new List<string>();
+            double 白蛋白 = medCarInfoClasses.白蛋白.StringToDouble();
+            double 肌酸酐 = medCarInfoClasses.肌酸酐.StringToDouble();
+            double 估算腎小球過濾率 = medCarInfoClasses.估算腎小球過濾率.StringToDouble();
+            double 丙氨酸氨基轉移酶 = medCarInfoClasses.丙氨酸氨基轉移酶.StringToDouble();
+            double 鉀離子 = medCarInfoClasses.鉀離子.StringToDouble();
+            double 鈣離子 = medCarInfoClasses.鈣離子.StringToDouble();
+            double 總膽紅素 = medCarInfoClasses.總膽紅素.StringToDouble();
+            double 鈉離子 = medCarInfoClasses.鈉離子.StringToDouble();
+            double 白血球 = medCarInfoClasses.白血球.StringToDouble();
+            double 血紅素 = medCarInfoClasses.血紅素.StringToDouble();
+            double 血小板 = medCarInfoClasses.血小板.StringToDouble();
+            double 國際標準化比率 = medCarInfoClasses.國際標準化比率.StringToDouble();
+
+
+            if (白蛋白 < 3.7 || 白蛋白 > 5.3) abnormalList.Add("alb");
+            if (肌酸酐 < 0.5 || 肌酸酐 > 0.9) abnormalList.Add("scr");
+            if (估算腎小球過濾率 <= 60) abnormalList.Add("egfr");
+            if (丙氨酸氨基轉移酶 < 33) abnormalList.Add("alt");
+            if (鉀離子 <= 3.5 || 鉀離子 >= 5.1) abnormalList.Add("k");
+            if (鈣離子 <= 8.6 || 鈣離子 >= 10.0) abnormalList.Add("ca");
+            if (總膽紅素 < 1.2) abnormalList.Add("tb");
+            if (鈉離子 <= 136 || 鈉離子 >= 145) abnormalList.Add("na");
+            if (白血球 <= 4180 || 白血球 >= 9380) abnormalList.Add("wbc");
+            if (血紅素 <= 10.9 || 血紅素 >= 15.6) abnormalList.Add("hgb");
+            if (血小板 <= 145000.0 || 血小板 >= 383000) abnormalList.Add("plt");
+            if (國際標準化比率 < 0.82 || 國際標準化比率 > 1.15) abnormalList.Add("inr");
+
+            string[] abnormalArray = abnormalList.ToArray();
+            string abnormal = string.Join(";", abnormalArray);
+            medCarInfoClasses.檢驗數值異常 = abnormal;
+            return medCarInfoClasses;
+        }
+    }  
 }
