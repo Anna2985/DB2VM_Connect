@@ -487,7 +487,7 @@ namespace DB2VM_API.Controller.API_SP
                             }
 
 
-
+                            diseaseClass diseaseClass = new diseaseClass();
                             foreach (var row in results)
                             {
                                 if (row.ContainsKey("UDPDPSY") && row.ContainsKey("UDPDPVL"))
@@ -506,14 +506,7 @@ namespace DB2VM_API.Controller.API_SP
                                     if (key == "PBHIGHT") medCarInfoClass.身高 = value;
                                     if (key == "PBWEIGHT") medCarInfoClass.體重 = value;
                                     if (key == "PBBSA") medCarInfoClass.體表面積 = value;
-                                    //if (key == "HICD1") medCarInfoClass.國際疾病分類代碼1 = value;
-                                    //if (key == "HICDTX1") medCarInfoClass.疾病說明1 = value;
-                                    //if (key == "HICD2") medCarInfoClass.國際疾病分類代碼2 = value;
-                                    //if (key == "HICDTX2") medCarInfoClass.疾病說明2 = value;
-                                    //if (key == "HICD3") medCarInfoClass.國際疾病分類代碼3 = value;
-                                    //if (key == "HICDTX3") medCarInfoClass.疾病說明3 = value;
-                                    //if (key == "HICD4") medCarInfoClass.國際疾病分類代碼4 = value;
-                                    //if (key == "HICDTX4") medCarInfoClass.疾病說明4 = value;
+                                    
                                     if (key == "NGTUBE") medCarInfoClass.鼻胃管使用狀況 = value;
                                     if (key == "TUBE") medCarInfoClass.其他管路使用狀況 = value;
                                     if (key == "HAllERGY") medCarInfoClass.過敏史 = value;
@@ -529,9 +522,21 @@ namespace DB2VM_API.Controller.API_SP
                                     if (key == "RTHGB") medCarInfoClass.血紅素 = value;
                                     if (key == "RTPLT") medCarInfoClass.血小板 = value;
                                     if (key == "RTINR") medCarInfoClass.國際標準化比率 = value;
+                                    if (key == "PBIRTH8") medCarInfoClass.年齡 = age(value);
+
+                                    if (key == "HICD1") diseaseClass.國際疾病分類代碼1 = value;
+                                    if (key == "HICDTX1") diseaseClass.疾病說明1 = value;
+                                    if (key == "HICD2") diseaseClass.國際疾病分類代碼2 = value;
+                                    if (key == "HICDTX2") diseaseClass.疾病說明2 = value;
+                                    if (key == "HICD3") diseaseClass.國際疾病分類代碼3 = value;
+                                    if (key == "HICDTX3") diseaseClass.疾病說明3 = value;
+                                    if (key == "HICD4") diseaseClass.國際疾病分類代碼4 = value;
+                                    if (key == "HICDTX4") diseaseClass.疾病說明4 = value;
                                 }
-                                    
                             }
+                            (string 疾病代碼, string 疾病說明) = disease(diseaseClass);
+                            medCarInfoClass.疾病代碼 = 疾病代碼;
+                            medCarInfoClass.疾病說明 = 疾病說明;
                         }
                     }
                 }
@@ -717,6 +722,53 @@ namespace DB2VM_API.Controller.API_SP
                 return prescription;
             }
 
+        }
+        private string age(string birthday)
+        {
+            int birthYear = birthday.Substring(0, 4).StringToInt32();
+            int birthMon = birthday.Substring(4, 2).StringToInt32();
+            int birthDay = birthday.Substring(6, 2).StringToInt32();
+
+            DateTime today = DateTime.Now;
+            int todayYear = today.Year;
+            int todayMon = today.Month;
+            int todayDay = today.Day;
+
+            int ageYears = todayYear - birthYear;
+            int ageMonths = todayMon - birthMon;
+
+            if (ageMonths < 0 || (ageMonths == 0 && todayDay < birthDay))
+            {
+                ageYears--;
+                ageMonths += 12;
+            }
+
+            if (todayDay < birthDay)
+            {
+                ageMonths--;
+                if (ageMonths < 0)
+                {
+                    ageYears--;
+                    ageMonths += 12;
+                }
+            }
+            string ages = $"{ageYears}歲{ageMonths}月";
+
+            return ages;
+        }
+        private (string dieaseCode, string dieaseName) disease(diseaseClass diseaseClass)
+        {
+            string dieaseCode = "";
+            if (!string.IsNullOrWhiteSpace(diseaseClass.國際疾病分類代碼1)) dieaseCode = diseaseClass.國際疾病分類代碼1;
+            if (!string.IsNullOrWhiteSpace(diseaseClass.國際疾病分類代碼2)) dieaseCode += $";{ diseaseClass.國際疾病分類代碼2}";
+            if (!string.IsNullOrWhiteSpace(diseaseClass.國際疾病分類代碼3)) dieaseCode += $";{ diseaseClass.國際疾病分類代碼3}";
+            if (!string.IsNullOrWhiteSpace(diseaseClass.國際疾病分類代碼4)) dieaseCode += $";{ diseaseClass.國際疾病分類代碼4}";
+            string dieaseName = "";
+            if (!string.IsNullOrWhiteSpace(diseaseClass.疾病說明1)) dieaseName = diseaseClass.疾病說明1;
+            if (!string.IsNullOrWhiteSpace(diseaseClass.疾病說明2)) dieaseCode += $";{ diseaseClass.疾病說明2}";
+            if (!string.IsNullOrWhiteSpace(diseaseClass.疾病說明3)) dieaseCode += $";{ diseaseClass.疾病說明3}";
+            if (!string.IsNullOrWhiteSpace(diseaseClass.疾病說明4)) dieaseCode += $";{ diseaseClass.疾病說明4}";
+            return (dieaseCode, dieaseName);
         }
     }   
 }
