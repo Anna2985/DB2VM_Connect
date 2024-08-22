@@ -724,7 +724,7 @@ namespace DB2VM_API.Controller.API_SP
                                         床號 = medCarInfoClass.床號,
                                         住院號 = reader["UDCASENO"].ToString().Trim(),
                                         序號 = reader["UDORDSEQ"].ToString().Trim(),
-                                        狀態 = reader["UDSTATUS"].ToString().Trim(),
+                                        //狀態 = reader["UDSTATUS"].ToString().Trim(),
                                         開始時間 = 開始日期時間.ToDateTimeString_6(),
                                         結束時間 = 結束日期時間.ToDateTimeString_6(),
                                         藥碼 = reader["UDDRGNO"].ToString().Trim(),
@@ -756,6 +756,10 @@ namespace DB2VM_API.Controller.API_SP
                                         交互作用 = reader["UDDDI"].ToString().Trim(),
                                         交互作用等級 = reader["UDDDIC"].ToString().Trim()
                                     };
+                                    if (reader["UDSTATUS"].ToString().Trim() == "80") medCpoeClass.狀態 = "DC";
+                                    if (reader["UDSTATUS"].ToString().Trim() == "30") medCpoeClass.狀態 = "New";
+                                    if (medCpoeClass.狀態 == "DC") medCpoeClass.更新時間 = medCpoeClass.結束時間;
+                                    if (medCpoeClass.狀態 == "New") medCpoeClass.更新時間 = medCpoeClass.開始時間;
                                     prescription.Add(medCpoeClass);
                                 }
                             }
