@@ -226,8 +226,9 @@ namespace DB2VM_API.Controller.API_SP
                 return returnData.JsonSerializationt(true);
             }
         }
-        [HttpPost("get_medCpoe_change")]
-        public string get_medCpoe_change([FromBody] returnData returnData)
+        
+        [HttpPost("get_medChange_by_GUID")]
+        public string get_medChange_by_GUID([FromBody] returnData returnData)
         {
             MyTimerBasic myTimerBasic = new MyTimerBasic();
             try
@@ -238,10 +239,10 @@ namespace DB2VM_API.Controller.API_SP
                     returnData.Result = $"returnData.ValueAry 無傳入資料";
                     return returnData.JsonSerializationt(true);
                 }
-                if (returnData.ValueAry.Count != 2)
+                if (returnData.ValueAry.Count != 1)
                 {
                     returnData.Code = -200;
-                    returnData.Result = $"returnData.ValueAry 內容應為[藥局, 護理站]";
+                    returnData.Result = $"returnData.ValueAry 內容應為[GUID]";
                     return returnData.JsonSerializationt(true);
                 }
                 List<ServerSettingClass> serverSettingClasses = ServerSettingClassMethod.WebApiGet($"{API_Server}");
@@ -252,17 +253,27 @@ namespace DB2VM_API.Controller.API_SP
                     returnData.Result = $"找無Server資料!";
                     return returnData.JsonSerializationt();
                 }
-                string 藥局 = returnData.ValueAry[0];
-                string 護理站 = returnData.ValueAry[1];
-                List<medCarInfoClass> bedList = ExecuteUDPDPPF1(藥局, 護理站);
-                List<medCpoeClass> medCpoe_chang = ExecuteUDPDPORD(bedList);
+                string Server = serverSettingClasses[0].Server;
+                string API = $"http://{Server}:4436";
+                string GUID = returnData.ValueAry[0];
+                List<string> valueAry = new List<string> { GUID };
+
+
+                List<medCarInfoClass> bedList = medCarInfoClass.get_patient_by_GUID(API, valueAry);
+                List<medCpoeRecClass> medCpoe_change = ExecuteUDPDPORD(bedList);
+                List<medCpoeRecClass> update_medCpoe_change = medCpoeRecClass.update_med_CpoeRec(API,medCpoe_change);
+                List<medCarInfoClass> get_patient = medCpoeRecClass.get_medChange_by_GUID(API, valueAry);
+
+
+
+
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
-                returnData.Data = medCpoe_chang;
+                returnData.Data = get_patient;
                 //returnData.Result = $"取得 {護理站} 病床資訊共{update_medCarInfoClass.Count}/{bedListInfo.Count}筆";
                 return returnData.JsonSerializationt(true);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 returnData.Code = -200;
                 returnData.Result = $"Exception:{ex.Message}";
@@ -364,6 +375,52 @@ namespace DB2VM_API.Controller.API_SP
                 return returnData.JsonSerializationt(true);
             }
         }
+        [HttpPost("get_medChange_by_cart")]
+        public string get_medChange_by_cart([FromBody] returnData returnData)
+        {
+            MyTimerBasic myTimerBasic = new MyTimerBasic();
+            try
+            {
+                if (returnData.ValueAry == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"returnData.ValueAry 無傳入資料";
+                    return returnData.JsonSerializationt(true);
+                }
+                if (returnData.ValueAry.Count != 2)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"returnData.ValueAry 內容應為[藥局, 護理站]";
+                    return returnData.JsonSerializationt(true);
+                }
+                List<ServerSettingClass> serverSettingClasses = ServerSettingClassMethod.WebApiGet($"{API_Server}");
+                serverSettingClasses = serverSettingClasses.MyFind("Main", "網頁", "VM端");
+                if (serverSettingClasses.Count == 0)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"找無Server資料!";
+                    return returnData.JsonSerializationt();
+                }
+                string Server = serverSettingClasses[0].Server;
+                string API = $"http://{Server}:4436";
+                string 藥局 = returnData.ValueAry[0];
+                string 護理站 = returnData.ValueAry[1];
+                List<medCarInfoClass> bedList = ExecuteUDPDPPF1(藥局, 護理站);
+                List<medCpoeRecClass> medCpoe_change = ExecuteUDPDPORD(bedList);
+                List<medCpoeRecClass> update_medCpoe_change = medCpoeRecClass.update_med_CpoeRec(API, medCpoe_change);
+                returnData.Code = 200;
+                returnData.TimeTaken = $"{myTimerBasic}";
+                returnData.Data = update_medCpoe_change;
+                //returnData.Result = $"取得 {護理站} 病床資訊共{update_medCarInfoClass.Count}/{bedListInfo.Count}筆";
+                return returnData.JsonSerializationt(true);
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = -200;
+                returnData.Result = $"Exception:{ex.Message}";
+                return returnData.JsonSerializationt(true);
+            }
+        }
         [HttpGet("UDPDPPF1")]
         public string UDPDPPF1()
         {
@@ -434,7 +491,7 @@ namespace DB2VM_API.Controller.API_SP
                 住院號 = "31641549"
             };
             medCarInfoClassList.Add(v1);
-            List<medCpoeClass> medCarInfoClasses = ExecuteUDPDPORD(medCarInfoClassList);
+            List<medCpoeRecClass> medCarInfoClasses = ExecuteUDPDPORD(medCarInfoClassList);
             returnData.Code = 200;
             returnData.TimeTaken = $"{myTimerBasic}";
             returnData.Data = medCarInfoClasses;
@@ -446,7 +503,7 @@ namespace DB2VM_API.Controller.API_SP
         {
             MyTimerBasic myTimerBasic = new MyTimerBasic();           
             List<medCarInfoClass> medCarInfoClassList = returnData.Data.ObjToClass<List<medCarInfoClass>>();        
-            List<medCpoeClass> medCarInfoClasses = ExecuteUDPDPORD(medCarInfoClassList);
+            List<medCpoeRecClass> medCarInfoClasses = ExecuteUDPDPORD(medCarInfoClassList);
             returnData.Code = 200;
             returnData.TimeTaken = $"{myTimerBasic}";
             returnData.Data = medCarInfoClasses;
@@ -682,13 +739,13 @@ namespace DB2VM_API.Controller.API_SP
                 return prescription;
             }         
         }
-        private List<medCpoeClass> ExecuteUDPDPORD(List<medCarInfoClass> medCarInfoClasses)
+        private List<medCpoeRecClass> ExecuteUDPDPORD(List<medCarInfoClass> medCarInfoClasses)
         {
             using (DB2Connection MyDb2Connection = GetDB2Connection())
             {
                 MyDb2Connection.Open();
                 string procName = $"{DB2_schema}.UDPDPORD";
-                List<medCpoeClass> prescription = new List<medCpoeClass>();
+                List<medCpoeRecClass> medCpoeRecClasses = new List<medCpoeRecClass>();
                 foreach (var medCarInfoClass in medCarInfoClasses)
                 {
                     if (medCarInfoClass.住院號.StringIsEmpty()) continue;
@@ -717,50 +774,34 @@ namespace DB2VM_API.Controller.API_SP
                                     string 結束時間 = reader["UDENDTM"].ToString().Trim();
                                     日期時間 = $"{結束日期} {結束時間.Substring(0, 2)}:{結束時間.Substring(2, 2)}:00";
                                     DateTime 結束日期時間 = DateTime.ParseExact(日期時間, "yyyy-MM-dd HH:mm:ss", null);
-                                    medCpoeClass medCpoeClass = new medCpoeClass
+                                    medCpoeRecClass medCpoeRecClass = new medCpoeRecClass
                                     {
+                                        GUID = Guid.NewGuid().ToString(),
+                                        Master_GUID = medCarInfoClass.GUID,
                                         藥局 = medCarInfoClass.藥局,
                                         護理站 = medCarInfoClass.護理站,
                                         床號 = medCarInfoClass.床號,
                                         住院號 = reader["UDCASENO"].ToString().Trim(),
                                         序號 = reader["UDORDSEQ"].ToString().Trim(),
-                                        //狀態 = reader["UDSTATUS"].ToString().Trim(),
                                         開始時間 = 開始日期時間.ToDateTimeString_6(),
                                         結束時間 = 結束日期時間.ToDateTimeString_6(),
                                         藥碼 = reader["UDDRGNO"].ToString().Trim(),
-                                        頻次代碼 = reader["UDFREQN"].ToString().Trim(),
-                                        頻次屬性 = reader["UDFRQATR"].ToString().Trim(),
                                         藥品名 = reader["UDDRGNAM"].ToString().Trim(),
-                                        途徑 = reader["UDROUTE"].ToString().Trim(),
                                         數量 = reader["UDLQNTY"].ToString().Trim(),
                                         劑量 = reader["UDDOSAGE"].ToString().Trim(),
-                                        單位 = reader["UDDUNIT"].ToString().Trim(),
-                                        期限 = reader["UDDURAT"].ToString().Trim(),
-                                        自動包藥機 = reader["UDDSPMF"].ToString().Trim(),
-                                        化癌分類 = reader["UDCHEMO"].ToString().Trim(),
-                                        自購 = reader["UDSELF"].ToString().Trim(),
-                                        血液製劑註記 = reader["UDALBUMI"].ToString().Trim(),
+                                        單位 = reader["UDDUNIT"].ToString().Trim(),                            
                                         處方醫師 = reader["UDORSIGN"].ToString().Trim(),
                                         處方醫師姓名 = reader["UDSIGNAM"].ToString().Trim(),
                                         操作人員 = reader["UDLUSER"].ToString().Trim(),
                                         藥局代碼 = reader["UDLRXID"].ToString().Trim(),
                                         大瓶點滴 = reader["UDCNT02"].ToString().Trim(),
-                                        LKFLAG = reader["UDBRFNM"].ToString().Trim(),
-                                        排序 = reader["UDRANK"].ToString().Trim(),
-                                        判讀藥師代碼 = reader["PHARNUM"].ToString().Trim(),
-                                        判讀FLAG = reader["FLAG"].ToString().Trim(),
-                                        勿磨 = reader["UDNGT"].ToString().Trim(),
-                                        抗生素等級 = reader["UDANTICG"].ToString().Trim(),
-                                        重複用藥 = reader["UDSAMEDG"].ToString().Trim(),
-                                        配藥天數 = reader["UDDSPDY"].ToString().Trim(),
-                                        交互作用 = reader["UDDDI"].ToString().Trim(),
-                                        交互作用等級 = reader["UDDDIC"].ToString().Trim()
+                                   
                                     };
-                                    if (reader["UDSTATUS"].ToString().Trim() == "80") medCpoeClass.狀態 = "DC";
-                                    if (reader["UDSTATUS"].ToString().Trim() == "30") medCpoeClass.狀態 = "New";
-                                    if (medCpoeClass.狀態 == "DC") medCpoeClass.更新時間 = medCpoeClass.結束時間;
-                                    if (medCpoeClass.狀態 == "New") medCpoeClass.更新時間 = medCpoeClass.開始時間;
-                                    prescription.Add(medCpoeClass);
+                                    if (reader["UDSTATUS"].ToString().Trim() == "80") medCpoeRecClass.狀態 = "DC";
+                                    if (reader["UDSTATUS"].ToString().Trim() == "30") medCpoeRecClass.狀態 = "New";
+                                    if (medCpoeRecClass.狀態 == "DC") medCpoeRecClass.更新時間 = medCpoeRecClass.結束時間;
+                                    if (medCpoeRecClass.狀態 == "New") medCpoeRecClass.更新時間 = medCpoeRecClass.開始時間;
+                                    medCpoeRecClasses.Add(medCpoeRecClass);
                                 }
                             }
                         }
@@ -771,7 +812,7 @@ namespace DB2VM_API.Controller.API_SP
                         
                     }
                 }
-                return prescription;
+                return medCpoeRecClasses;
             }
 
         }
