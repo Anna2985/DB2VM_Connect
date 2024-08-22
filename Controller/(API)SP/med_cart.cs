@@ -405,8 +405,10 @@ namespace DB2VM_API.Controller.API_SP
                 string API = $"http://{Server}:4436";
                 string 藥局 = returnData.ValueAry[0];
                 string 護理站 = returnData.ValueAry[1];
-                List<medCarInfoClass> bedList = ExecuteUDPDPPF1(藥局, 護理站);
-                List<medCpoeRecClass> medCpoe_change = ExecuteUDPDPORD(bedList);
+                List<string> valueAry = new List<string> { 藥局, 護理站 };
+                //List<medCarInfoClass> bedList = ExecuteUDPDPPF1(藥局, 護理站);
+                List<medCarInfoClass> bedList = medCarInfoClass.get_bed_list_by_cart(API, valueAry);
+                List <medCpoeRecClass> medCpoe_change = ExecuteUDPDPORD(bedList);
                 List<medCpoeRecClass> update_medCpoe_change = medCpoeRecClass.update_med_CpoeRec(API, medCpoe_change);
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
