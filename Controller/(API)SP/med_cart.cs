@@ -145,7 +145,7 @@ namespace DB2VM_API.Controller.API_SP
                 List<string> valueAry2 = new List<string> { 藥局, 護理站, 床號 };
 
                 List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedListInfo);
-                List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe, valueAry);
+                List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe);
                 List<medCarInfoClass> out_medCarInfoClass = medCarInfoClass.get_patient_by_GUID(API, valueAry2);
 
                 returnData.Code = 200;
@@ -212,7 +212,7 @@ namespace DB2VM_API.Controller.API_SP
                 List<string> valueAry = new List<string> { 藥局, 護理站 };
                 List<medCarInfoClass> bedList = ExecuteUDPDPPF1(藥局, 護理站);
                 List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(bedList);
-                List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe, valueAry);
+                List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe);
                 List<medQtyClass> get_med_qty = medCpoeClass.get_med_qty(API, valueAry);
 
                 returnData.Code = 200;
@@ -359,8 +359,8 @@ namespace DB2VM_API.Controller.API_SP
                 List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedListInfo);
                 List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(update_medCarInfoClass);
                 List<string> valueAry = new List<string> { 藥局, 護理站 };
-                List<medCpoeClass> update_medCpoeClass = medCpoeClass.add_med_cpoe(API, bedListCpoe);
-                //List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedList);
+                //List<medCpoeClass> update_medCpoeClass = medCpoeClass.add_med_cpoe(API, bedListCpoe);
+                List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe);
 
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
