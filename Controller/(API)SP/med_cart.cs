@@ -93,8 +93,8 @@ namespace DB2VM_API.Controller.API_SP
         /// </remarks>
         /// <param name="returnData">共用傳遞資料結構</param>
         /// <returns></returns>
-        [HttpPost("get_patient_by_bedNum")]
-        public string get_patient_by_bedNum([FromBody] returnData returnData)
+        [HttpPost("get_patient_by_GUID")]
+        public string get_patient_by_GUID([FromBody] returnData returnData)
         {
             MyTimerBasic myTimerBasic = new MyTimerBasic();
             try
@@ -108,7 +108,7 @@ namespace DB2VM_API.Controller.API_SP
                 if (returnData.ValueAry.Count != 3)
                 {
                     returnData.Code = -200;
-                    returnData.Result = $"returnData.ValueAry 內容應為[藥局, 護理站, 床號]";
+                    returnData.Result = $"returnData.ValueAry 內容應為[GUID]";
                     return returnData.JsonSerializationt(true);
                 }
                 List<ServerSettingClass> serverSettingClasses = ServerSettingClassMethod.WebApiGet($"{API_Server}");
@@ -122,29 +122,31 @@ namespace DB2VM_API.Controller.API_SP
 
                 string Server = serverSettingClasses[0].Server;
                 string API = $"http://{Server}:4436";
-                string 藥局 = returnData.ValueAry[0];
-                string 護理站 = returnData.ValueAry[1];
-                string 床號 = returnData.ValueAry[2];
-                List<medCarInfoClass> bedList = ExecuteUDPDPPF1(藥局, 護理站);
-                medCarInfoClass targetPatient = bedList.FirstOrDefault(temp => temp.床號 == 床號);
-                if (targetPatient == null)
+                string GUID = returnData.ValueAry[0];
+                List<medCarInfoClass> targetPatient = medCarInfoClass.get_patient_by_GUID(API, returnData.ValueAry);
+                if (targetPatient.Count != 1)
                 {
                     returnData.Code = -200;
                     returnData.Result = "無對應的病人資料";
                     return returnData.JsonSerializationt(true);
                 }
-                List<medCarInfoClass> update = new List<medCarInfoClass> { targetPatient };
+                string 藥局 = targetPatient[0].藥局;
+                string 護理站 = targetPatient[0].護理站;
+                string 床號 = targetPatient[0].床號;
+                //List<medCarInfoClass> bedList = ExecuteUDPDPPF1(藥局, 護理站);
+                //medCarInfoClass targetPatient = bedList.FirstOrDefault(temp => temp.床號 == 床號);
+                //List<medCarInfoClass> update = new List<medCarInfoClass> { targetPatient };
 
-                List<medCarInfoClass> bedListInfo = ExecuteUDPDPPF0(update);
+                List <medCarInfoClass> bedListInfo = ExecuteUDPDPPF0(targetPatient);
                 List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(bedListInfo);
                 bedListInfo[0].處方 = bedListCpoe;
 
                 List<string> valueAry = new List<string> { 藥局, 護理站 };
                 List<string> valueAry2 = new List<string> { 藥局, 護理站, 床號 };
 
-                List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, update);
+                List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedListInfo);
                 List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe, valueAry);
-                List<medCarInfoClass> out_medCarInfoClass = medCarInfoClass.get_patient_by_bedNum(API, valueAry2);
+                List<medCarInfoClass> out_medCarInfoClass = medCarInfoClass.get_patient_by_GUID(API, valueAry2);
 
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
@@ -354,18 +356,16 @@ namespace DB2VM_API.Controller.API_SP
                 string 護理站 = returnData.ValueAry[1];
                 List<medCarInfoClass> bedList = ExecuteUDPDPPF1(藥局, 護理站);              
                 List<medCarInfoClass> bedListInfo = ExecuteUDPDPPF0(bedList);
-                List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(bedListInfo);
-
-                List<string> valueAry = new List<string> { 藥局, 護理站 };
-
-                //List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedList);
                 List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedListInfo);
-                List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe, valueAry);
+                List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(update_medCarInfoClass);
+                List<string> valueAry = new List<string> { 藥局, 護理站 };
+                List<medCpoeClass> update_medCpoeClass = medCpoeClass.add_med_cpoe(API, bedListCpoe);
+                //List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedList);
 
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
-                returnData.Data = update_medCarInfoClass;
-                returnData.Result = $"取得 {護理站} 病床資訊共{update_medCarInfoClass.Count}/{bedList.Count}筆";
+                returnData.Data = bedListInfo;
+                returnData.Result = $"取得 {護理站} 病床資訊共{bedList.Count}筆";
                 return returnData.JsonSerializationt(true);
             }
             catch (Exception ex)
@@ -545,14 +545,13 @@ namespace DB2VM_API.Controller.API_SP
                             medCarInfoClass medCarInfoClass = new medCarInfoClass
                             {
                                 藥局 = phar,
+                                更新時間 = DateTime.Now.ToDateTimeString(),
                                 護理站 = reader["HNURSTA"].ToString().Trim(),
                                 床號 = reader["HBEDNO"].ToString().Trim(),
                                 病歷號 = reader["HISTNUM"].ToString().Trim(),
                                 住院號 = reader["PCASENO"].ToString().Trim(),
                                 姓名 = reader["PNAMEC"].ToString().Trim()                              
-                                //占床狀態 = reader["HBEDSTAT"].ToString().Trim() == "O" ? "已佔床" : ""
                             };
-                            //if (medCarInfoClass.姓名 != null) medCarInfoClass.占床狀態 = "已佔床";
                             if (!string.IsNullOrWhiteSpace(medCarInfoClass.姓名)) medCarInfoClass.占床狀態 = "已佔床";
                             medCarInfoClasses.Add(medCarInfoClass);
                         }
@@ -687,6 +686,8 @@ namespace DB2VM_API.Controller.API_SP
                                     藥局 = medCarInfoClass.藥局,
                                     護理站 = medCarInfoClass.護理站,
                                     床號 = medCarInfoClass.床號,
+                                    Master_GUID = medCarInfoClass.GUID,
+                                    更新時間 = DateTime.Now.ToDateTimeString(),
                                     住院號 = reader["UDCASENO"].ToString().Trim(),
                                     序號 = reader["UDORDSEQ"].ToString().Trim(),
                                     開始時間 = 開始日期時間.ToDateTimeString_6(),
@@ -731,6 +732,8 @@ namespace DB2VM_API.Controller.API_SP
                                 if (medCpoeClass.藥局代碼 == "EW01") medCpoeClass.藥局名稱 = "思源樓神經再生藥局";
                                 if (medCpoeClass.藥局代碼 == "UBTP") medCpoeClass.藥局名稱 = "中正樓臨床試驗藥局";
                                 if (medCpoeClass.藥局代碼 == "UC02") medCpoeClass.藥局名稱 = "長青樓藥局";
+                                if (string.IsNullOrWhiteSpace(medCpoeClass.狀態)) medCpoeClass.狀態 = "New";
+
 
 
                                 prescription.Add(medCpoeClass);
@@ -803,6 +806,22 @@ namespace DB2VM_API.Controller.API_SP
                                     if (reader["UDSTATUS"].ToString().Trim() == "30") medCpoeRecClass.狀態 = "New";
                                     if (medCpoeRecClass.狀態 == "DC") medCpoeRecClass.更新時間 = medCpoeRecClass.結束時間;
                                     if (medCpoeRecClass.狀態 == "New") medCpoeRecClass.更新時間 = medCpoeRecClass.開始時間;
+                                    if (string.IsNullOrWhiteSpace(medCpoeRecClass.狀態))
+                                    {
+                                        DateTime startday = medCpoeRecClass.開始時間.StringToDateTime().Date;
+                                        DateTime endday = medCpoeRecClass.結束時間.StringToDateTime().Date;
+                                        DateTime today = DateTime.Now.Date;
+                                        if(startday == today)
+                                        {
+                                            medCpoeRecClass.狀態 = "New";
+                                            medCpoeRecClass.更新時間 = medCpoeRecClass.開始時間;
+                                        }
+                                        if(endday == today)
+                                        {
+                                            medCpoeRecClass.狀態 = "DC";
+                                            medCpoeRecClass.更新時間 = medCpoeRecClass.結束時間;
+                                        }
+                                    }
                                     medCpoeRecClasses.Add(medCpoeRecClass);
                                 }
                             }
