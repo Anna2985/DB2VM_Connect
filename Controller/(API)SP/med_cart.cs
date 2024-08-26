@@ -105,7 +105,7 @@ namespace DB2VM_API.Controller.API_SP
                     returnData.Result = $"returnData.ValueAry 無傳入資料";
                     return returnData.JsonSerializationt(true);
                 }
-                if (returnData.ValueAry.Count != 3)
+                if (returnData.ValueAry.Count != 1)
                 {
                     returnData.Code = -200;
                     returnData.Result = $"returnData.ValueAry 內容應為[GUID]";
@@ -123,21 +123,22 @@ namespace DB2VM_API.Controller.API_SP
                 string Server = serverSettingClasses[0].Server;
                 string API = $"http://{Server}:4436";
                 string GUID = returnData.ValueAry[0];
-                List<medCarInfoClass> targetPatient = medCarInfoClass.get_patient_by_GUID(API, returnData.ValueAry);
-                if (targetPatient.Count != 1)
-                {
-                    returnData.Code = -200;
-                    returnData.Result = "無對應的病人資料";
-                    return returnData.JsonSerializationt(true);
-                }
-                string 藥局 = targetPatient[0].藥局;
-                string 護理站 = targetPatient[0].護理站;
-                string 床號 = targetPatient[0].床號;
+                medCarInfoClass targetPatient = medCarInfoClass.get_patient_by_GUID(API, returnData.ValueAry);
+                //if (targetPatient.Count != 1)
+                //{
+                //    returnData.Code = -200;
+                //    returnData.Result = "無對應的病人資料";
+                //    return returnData.JsonSerializationt(true);
+                //}
+                string 藥局 = targetPatient.藥局;
+                string 護理站 = targetPatient.護理站;
+                string 床號 = targetPatient.床號;
+                List<medCarInfoClass> medCarInfoClasses = new List<medCarInfoClass> { targetPatient };
                 //List<medCarInfoClass> bedList = ExecuteUDPDPPF1(藥局, 護理站);
                 //medCarInfoClass targetPatient = bedList.FirstOrDefault(temp => temp.床號 == 床號);
                 //List<medCarInfoClass> update = new List<medCarInfoClass> { targetPatient };
 
-                List <medCarInfoClass> bedListInfo = ExecuteUDPDPPF0(targetPatient);
+                List <medCarInfoClass> bedListInfo = ExecuteUDPDPPF0(medCarInfoClasses);
                 List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(bedListInfo);
                 bedListInfo[0].處方 = bedListCpoe;
 
@@ -146,7 +147,7 @@ namespace DB2VM_API.Controller.API_SP
 
                 List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedListInfo);
                 List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe);
-                List<medCarInfoClass> out_medCarInfoClass = medCarInfoClass.get_patient_by_GUID(API, valueAry2);
+                medCarInfoClass out_medCarInfoClass = medCarInfoClass.get_patient_by_GUID(API, valueAry2);
 
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
@@ -278,7 +279,8 @@ namespace DB2VM_API.Controller.API_SP
                 List<string> valueAry = new List<string> { GUID };
 
 
-                List<medCarInfoClass> bedList = medCarInfoClass.get_patient_by_GUID(API, valueAry);
+                //List<medCarInfoClass> bedList = medCarInfoClass.get_patient_by_GUID(API, valueAry);
+                List<medCarInfoClass> bedList = new List<medCarInfoClass> { medCarInfoClass.get_patient_by_GUID(API, valueAry) };
                 List<medCpoeRecClass> medCpoe_change = ExecuteUDPDPORD(bedList);
                 List<medCpoeRecClass> update_medCpoe_change = medCpoeRecClass.update_med_CpoeRec(API,medCpoe_change);
                 List<medCarInfoClass> get_patient = medCpoeRecClass.get_medChange_by_GUID(API, valueAry);
