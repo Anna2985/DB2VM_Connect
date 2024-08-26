@@ -124,12 +124,12 @@ namespace DB2VM_API.Controller.API_SP
                 string API = $"http://{Server}:4436";
                 string GUID = returnData.ValueAry[0];
                 medCarInfoClass targetPatient = medCarInfoClass.get_patient_by_GUID(API, returnData.ValueAry);
-                //if (targetPatient.Count != 1)
-                //{
-                //    returnData.Code = -200;
-                //    returnData.Result = "無對應的病人資料";
-                //    return returnData.JsonSerializationt(true);
-                //}
+                if (targetPatient == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "無對應的病人資料";
+                    return returnData.JsonSerializationt(true);
+                }
                 string 藥局 = targetPatient.藥局;
                 string 護理站 = targetPatient.護理站;
                 string 床號 = targetPatient.床號;
