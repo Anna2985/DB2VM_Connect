@@ -140,18 +140,19 @@ namespace DB2VM_API.Controller.API_SP
 
                 List <medCarInfoClass> bedListInfo = ExecuteUDPDPPF0(medCarInfoClasses);
                 List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(bedListInfo);
-                bedListInfo[0].處方 = bedListCpoe;
+                if (bedListCpoe == null) bedListInfo[0].調劑狀態 = "Y";
+                //bedListInfo[0].處方 = bedListCpoe;
 
-                List<string> valueAry = new List<string> { 藥局, 護理站 };
-                List<string> valueAry2 = new List<string> { 藥局, 護理站, 床號 };
+                    //List<string> valueAry = new List<string> { 藥局, 護理站 };
+                    //List<string> valueAry2 = new List<string> { 藥局, 護理站, 床號 };
 
                 List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedListInfo);
                 List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe);
-                medCarInfoClass out_medCarInfoClass = medCarInfoClass.get_patient_by_GUID(API, valueAry2);
+                medCarInfoClass out_medCarInfoClass = medCarInfoClass.get_patient_by_GUID(API, returnData.ValueAry);
 
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
-                returnData.Data = bedListInfo;
+                returnData.Data = out_medCarInfoClass;
                 returnData.Result = $"取得{藥局} {護理站} 第{床號}病床資訊";
                 return returnData.JsonSerializationt(true);
             }
@@ -405,8 +406,23 @@ namespace DB2VM_API.Controller.API_SP
                 List<medCarInfoClass> bedListInfo = ExecuteUDPDPPF0(bedList);
                 List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedListInfo);
                 List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(update_medCarInfoClass);
-                List<string> valueAry = new List<string> { 藥局, 護理站 };
+                //List<string> valueAry = new List<string> { 藥局, 護理站 };
                 List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe);
+
+                List<medCarInfoClass> update = new List<medCarInfoClass>();
+                foreach ( var medCarInfoClass in update_medCarInfoClass)
+                {
+                    List<medCpoeClass> medCpoeClasses = bedListCpoe
+                        .Where(temp => temp.Master_GUID == medCarInfoClass.GUID)
+                        .ToList();
+                    if (medCpoeClasses == null)
+                    {
+                        medCarInfoClass.調劑狀態 = "Y";
+                        update.Add(medCarInfoClass);
+                    }                       
+                }
+                if(update.Count != 0) medCarInfoClass.update_med_carinfo(API, update);
+
 
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
