@@ -9,6 +9,7 @@ using SQLUI;
 using HIS_DB_Lib;
 using IBM.Data.DB2.Core;
 using System.Data;
+using System.Text;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -410,23 +411,23 @@ namespace DB2VM_API.Controller.API_SP
                 List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe);
 
                 List<medCarInfoClass> update = new List<medCarInfoClass>();
-                foreach ( var medCarInfoClass in update_medCarInfoClass)
-                {
+                foreach (var medCarInfoClass in update_medCarInfoClass)
+                {               
                     List<medCpoeClass> medCpoeClasses = bedListCpoe
                         .Where(temp => temp.Master_GUID == medCarInfoClass.GUID)
                         .ToList();
-                    if (medCpoeClasses == null)
+                    if (medCpoeClasses.Count == 0 && medCarInfoClass.占床狀態 == "已佔床")
                     {
                         medCarInfoClass.調劑狀態 = "Y";
                         update.Add(medCarInfoClass);
-                    }                       
+                    }
                 }
-                if(update.Count != 0) medCarInfoClass.update_med_carinfo(API, update);
+                if (update.Count != 0) medCarInfoClass.update_med_carinfo(API, update);
 
 
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
-                returnData.Data = bedListInfo;
+                returnData.Data = update_medCpoeClass;
                 returnData.Result = $"取得 {護理站} 病床資訊共{bedList.Count}筆";
                 return returnData.JsonSerializationt(true);
             }
@@ -612,9 +613,11 @@ namespace DB2VM_API.Controller.API_SP
                                 床號 = reader["HBEDNO"].ToString().Trim(),
                                 病歷號 = reader["HISTNUM"].ToString().Trim(),
                                 住院號 = reader["PCASENO"].ToString().Trim(),
-                                姓名 = reader["PNAMEC"].ToString().Trim()                              
+                                姓名 = ReplaceInvalidCharacters(reader["PNAMEC"].ToString()).Trim()
                             };
                             if (!string.IsNullOrWhiteSpace(medCarInfoClass.姓名)) medCarInfoClass.占床狀態 = "已佔床";
+                           
+
                             medCarInfoClasses.Add(medCarInfoClass);
                         }
                         return medCarInfoClasses;
@@ -689,7 +692,10 @@ namespace DB2VM_API.Controller.API_SP
                                     if (key == "RTHGB") medCarInfoClass.血紅素 = value;
                                     if (key == "RTPLT") medCarInfoClass.血小板 = value;
                                     if (key == "RTINR") medCarInfoClass.國際標準化比率 = value;
-                                    if (key == "PBIRTH8") medCarInfoClass.年齡 = age(value);
+                                    if (key == "PBIRTH8")
+                                    {
+                                        if (!string.IsNullOrWhiteSpace(value)) medCarInfoClass.年齡 = age(value);
+                                    }
 
                                     if (key == "HICD1") diseaseClass.國際疾病分類代碼1 = value;
                                     if (key == "HICDTX1") diseaseClass.疾病說明1 = value;
@@ -981,6 +987,25 @@ namespace DB2VM_API.Controller.API_SP
             string abnormal = string.Join(";", abnormalArray);
             medCarInfoClasses.檢驗數值異常 = abnormal;
             return medCarInfoClasses;
+        }
+        private string ReplaceInvalidCharacters(string input)
+        {
+            char replacementChar = '?';
+            var output = new StringBuilder();
+
+            foreach (char c in input)
+            {
+                if (char.IsSurrogate(c) || c > '\uFFFF')
+                {
+                    output.Append(replacementChar); // 替換成 ?
+                }
+                else
+                {
+                    output.Append(c); // 保留原始字元
+                }
+            }
+
+            return output.ToString();
         }
     }  
 }
