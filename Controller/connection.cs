@@ -12,7 +12,7 @@ namespace DB2VM_API.Controller
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class Test2Controller : ControllerBase
+    public class connection : ControllerBase
     {
         string DB2_server = $"{ConfigurationManager.AppSettings["DB2_server"]}:{ConfigurationManager.AppSettings["DB2_port"]}";
         string DB2_database = $"{ConfigurationManager.AppSettings["DB2_database"]}";
@@ -23,7 +23,8 @@ namespace DB2VM_API.Controller
         [HttpGet]
         public string Get()
         {
-            String MyDb2ConnectionString = $"server={DB2_server};database={DB2_database};userid={DB2_userid};password={DB2_password};";
+            string table = "XVGHF3";
+            String MyDb2ConnectionString = $"server={DB2_server};database={table};userid={DB2_userid};password={DB2_password};";
             DB2Connection MyDb2Connection = new DB2Connection(MyDb2ConnectionString);
 
             try
