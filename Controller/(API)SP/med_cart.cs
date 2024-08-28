@@ -579,7 +579,20 @@ namespace DB2VM_API.Controller.API_SP
         public string UDPDPHLP()
         {
             MyTimerBasic myTimerBasic = new MyTimerBasic();
-            string code = "";
+            string code = "05052";
+            List<Dictionary<string, object>> result = ExecuteUDPDPHLP(code);
+            returnData returnData = new returnData();
+            returnData.Code = 200;
+            returnData.TimeTaken = $"{myTimerBasic}";
+            returnData.Data = result;
+            //returnData.Result = $"取得病床處方共{medCarInfoClasses.Count}筆";
+            return returnData.JsonSerializationt(true);
+        }
+        [HttpGet("UDPDPDRG")]
+        public string UDPDPDRG()
+        {
+            MyTimerBasic myTimerBasic = new MyTimerBasic();
+            string code = "05052";
             List<Dictionary<string, object>> result = ExecuteUDPDPHLP(code);
             returnData returnData = new returnData();
             returnData.Code = 200;
@@ -953,6 +966,42 @@ namespace DB2VM_API.Controller.API_SP
                 }
             }
         }
+        private List<Dictionary<string, object>> ExecuteUDPDPDRG(string code)
+        {
+            using (DB2Connection MyDb2Connection = GetDB2Connection())
+            {
+                MyDb2Connection.Open();
+                string SP = "UDPDPDRG";
+                string procName = $"{DB2_schema}.{SP}";
+                using (DB2Command cmd = MyDb2Connection.CreateCommand())
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandText = procName;
+                    cmd.Parameters.Add("@UDDRGNO", DB2Type.VarChar, 5).Value = code;
+                    DB2Parameter RET = cmd.Parameters.Add("@RET", DB2Type.Integer);
+                    DB2Parameter RETMSG = cmd.Parameters.Add("@RETMSG", DB2Type.VarChar, 60);
+                    using (DB2DataReader reader = cmd.ExecuteReader())
+                    {
+                        List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
+                        while (reader.Read())
+                        {
+                            Dictionary<string, object> row = new Dictionary<string, object>();
+
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                string columnName = reader.GetName(i);
+                                object value = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                                row.Add(columnName, value);
+                            }
+
+                            result.Add(row);
+                        }
+                        return result;
+                    }
+                }
+            }
+        }
+
         private string age(string birthday)
         {
             int birthYear = birthday.Substring(0, 4).StringToInt32();
