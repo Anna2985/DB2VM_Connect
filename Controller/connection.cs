@@ -19,13 +19,17 @@ namespace DB2VM_API.Controller
         string DB2_userid = $"{ConfigurationManager.AppSettings["DB2_user"]}";
         string DB2_password = $"{ConfigurationManager.AppSettings["DB2_password"]}";
         string DB2_schema = $"{ConfigurationManager.AppSettings["DB2_schema"]}";
+        private String conString = "jdbc:db2://10.30.253.249:51031/DBHIS";
+
 
         [HttpGet]
         public string Get()
         {
+            string vallue = "VGHLNXVG";
             string table = "XVGHF3";
-            String MyDb2ConnectionString = $"server={DB2_server};database={table};userid={DB2_userid};password={DB2_password};";
+            String MyDb2ConnectionString = $"server={conString};database={table};userid={DB2_userid};password={DB2_password};";
             DB2Connection MyDb2Connection = new DB2Connection(MyDb2ConnectionString);
+
 
             try
             {

@@ -123,7 +123,7 @@ namespace DB2VM_API.Controller.API_SP
 
                 string Server = serverSettingClasses[0].Server;
                 string API = $"http://{Server}:4436";
-                string GUID = returnData.ValueAry[0];
+                //string GUID = returnData.ValueAry[0];
                 medCarInfoClass targetPatient = medCarInfoClass.get_patient_by_GUID(API, returnData.ValueAry);
                 if (targetPatient == null)
                 {
@@ -135,17 +135,9 @@ namespace DB2VM_API.Controller.API_SP
                 string 護理站 = targetPatient.護理站;
                 string 床號 = targetPatient.床號;
                 List<medCarInfoClass> medCarInfoClasses = new List<medCarInfoClass> { targetPatient };
-                //List<medCarInfoClass> bedList = ExecuteUDPDPPF1(藥局, 護理站);
-                //medCarInfoClass targetPatient = bedList.FirstOrDefault(temp => temp.床號 == 床號);
-                //List<medCarInfoClass> update = new List<medCarInfoClass> { targetPatient };
-
                 List <medCarInfoClass> bedListInfo = ExecuteUDPDPPF0(medCarInfoClasses);
                 List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(bedListInfo);
-                if (bedListCpoe == null) bedListInfo[0].調劑狀態 = "Y";
-                //bedListInfo[0].處方 = bedListCpoe;
-
-                    //List<string> valueAry = new List<string> { 藥局, 護理站 };
-                    //List<string> valueAry2 = new List<string> { 藥局, 護理站, 床號 };
+                if (bedListCpoe.Count == 0) bedListInfo[0].調劑狀態 = "Y";
 
                 List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedListInfo);
                 List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe);
@@ -580,7 +572,8 @@ namespace DB2VM_API.Controller.API_SP
         {
             MyTimerBasic myTimerBasic = new MyTimerBasic();
             string code = "05052";
-            List<Dictionary<string, object>> result = ExecuteUDPDPHLP(code);
+            List<string> codes = new List<string>() { code };
+            List<medInfoClass> result = ExecuteUDPDPHLP(codes);
             returnData returnData = new returnData();
             returnData.Code = 200;
             returnData.TimeTaken = $"{myTimerBasic}";
@@ -592,8 +585,9 @@ namespace DB2VM_API.Controller.API_SP
         public string UDPDPDRG()
         {
             MyTimerBasic myTimerBasic = new MyTimerBasic();
-            string code = "05052";
-            List<Dictionary<string, object>> result = ExecuteUDPDPHLP(code);
+            List<medInfoClass> medInfoClasses = new List<medInfoClass>();
+            medInfoClasses[0].藥碼 = "04566";
+            List<medInfoClass> result = ExecuteUDPDPDRG(medInfoClasses);
             returnData returnData = new returnData();
             returnData.Code = 200;
             returnData.TimeTaken = $"{myTimerBasic}";
@@ -931,74 +925,77 @@ namespace DB2VM_API.Controller.API_SP
             }
 
         }
-        private List<Dictionary<string, object>> ExecuteUDPDPHLP(string code)
+        private List<medInfoClass> ExecuteUDPDPHLP(List<string> code)
         {
             using (DB2Connection MyDb2Connection = GetDB2Connection())
             {
                 MyDb2Connection.Open();
                 string SP = "UDPDPHLP";
                 string procName = $"{DB2_schema}.{SP}";
-                using (DB2Command cmd = MyDb2Connection.CreateCommand())
+                List<medInfoClass> medInfoClasses = new List<medInfoClass>();
+                for (int i = 0; i < code.Count; i++)
                 {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.CommandText = procName;
-                    cmd.Parameters.Add("@UDDRGNO", DB2Type.VarChar, 5).Value = code;
-                    DB2Parameter RET = cmd.Parameters.Add("@RET", DB2Type.Integer);
-                    DB2Parameter RETMSG = cmd.Parameters.Add("@RETMSG", DB2Type.VarChar, 60);
-                    using (DB2DataReader reader = cmd.ExecuteReader())
+                    using (DB2Command cmd = MyDb2Connection.CreateCommand())
                     {
-                        List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
-                        while (reader.Read())
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.CommandText = procName;
+                        cmd.Parameters.Add("@UDDRGNO", DB2Type.VarChar, 5).Value = code;
+                        DB2Parameter RET = cmd.Parameters.Add("@RET", DB2Type.Integer);
+                        DB2Parameter RETMSG = cmd.Parameters.Add("@RETMSG", DB2Type.VarChar, 60);
+                        using (DB2DataReader reader = cmd.ExecuteReader())
                         {
-                            Dictionary<string, object> row = new Dictionary<string, object>();
-
-                            for (int i = 0; i < reader.FieldCount; i++)
+                            while (reader.Read())
                             {
-                                string columnName = reader.GetName(i);
-                                object value = reader.IsDBNull(i) ? null : reader.GetValue(i);
-                                row.Add(columnName, value);
-                            }
-
-                            result.Add(row);
+                                medInfoClass medInfoClass = new medInfoClass
+                                {
+                                    序號 = reader["DHSEQNO"].ToString().Trim(),
+                                    分類號 = reader["DHCHARNO"].ToString().Trim(),
+                                    類別名 = reader["DHCHARNM"].ToString().Trim(),
+                                    藥品通名 = reader["DHGNAME"].ToString().Trim(),
+                                    藥品商品名 = reader["DHTNAME"].ToString().Trim(),
+                                    藥品分類 = reader["DHRXCLAS"].ToString().Trim(),
+                                    藥品治療分類 = reader["DHTXCLA"].ToString().Trim(),
+                                    適應症 = reader["DHINDICA"].ToString().Trim(),
+                                    用法劑量 = reader["DHADMIN"].ToString().Trim(),
+                                    備註 = reader["DHNOTE"].ToString().Trim(),
+                                    藥碼 = reader["DHIMAGEP"].ToString().Trim(),
+                                    更新時間 = reader["DHUPDT"].ToString().Trim(),
+                                };
+                                medInfoClasses.Add(medInfoClass);
+                            }                         
                         }
-                        return result;
-                    }
+                    }                  
                 }
-            }
+                return medInfoClasses;
+            } 
         }
-        private List<Dictionary<string, object>> ExecuteUDPDPDRG(string code)
+        private List<medInfoClass> ExecuteUDPDPDRG(List<medInfoClass> medInfoClasses)
         {
             using (DB2Connection MyDb2Connection = GetDB2Connection())
             {
                 MyDb2Connection.Open();
                 string SP = "UDPDPDRG";
                 string procName = $"{DB2_schema}.{SP}";
-                using (DB2Command cmd = MyDb2Connection.CreateCommand())
+                foreach (var medInfoClass in medInfoClasses)
                 {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.CommandText = procName;
-                    cmd.Parameters.Add("@UDDRGNO", DB2Type.VarChar, 5).Value = code;
-                    DB2Parameter RET = cmd.Parameters.Add("@RET", DB2Type.Integer);
-                    DB2Parameter RETMSG = cmd.Parameters.Add("@RETMSG", DB2Type.VarChar, 60);
-                    using (DB2DataReader reader = cmd.ExecuteReader())
+                    using (DB2Command cmd = MyDb2Connection.CreateCommand())
                     {
-                        List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
-                        while (reader.Read())
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.CommandText = procName;
+                        cmd.Parameters.Add("@UDDRGNO", DB2Type.VarChar, 5).Value = medInfoClass.藥碼;
+                        DB2Parameter RET = cmd.Parameters.Add("@RET", DB2Type.Integer);
+                        DB2Parameter RETMSG = cmd.Parameters.Add("@RETMSG", DB2Type.VarChar, 60);
+                        using (DB2DataReader reader = cmd.ExecuteReader())
                         {
-                            Dictionary<string, object> row = new Dictionary<string, object>();
+                            medInfoClass.售價 = reader["UDWCOST"].ToString().Trim();
+                            medInfoClass.健保價 = reader["UDPRICE"].ToString().Trim();
+                            medInfoClass.頻次代碼 = reader["UDFREQN"].ToString().Trim();
+                            medInfoClass.劑量 = reader["UDCMDOSA"].ToString().Trim();
 
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                string columnName = reader.GetName(i);
-                                object value = reader.IsDBNull(i) ? null : reader.GetValue(i);
-                                row.Add(columnName, value);
-                            }
-
-                            result.Add(row);
                         }
-                        return result;
                     }
                 }
+                return medInfoClasses;
             }
         }
 
