@@ -473,6 +473,71 @@ namespace DB2VM_API.Controller.API_SP
                 return returnData.JsonSerializationt(true);
             }
         }
+        [HttpPost("get_medInfo_by_cart")]
+        public string get_medInfo_by_cart([FromBody] returnData returnData)
+        {
+            MyTimerBasic myTimerBasic = new MyTimerBasic();
+            try
+            {
+                if (returnData.ValueAry == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"returnData.ValueAry 無傳入資料";
+                    return returnData.JsonSerializationt(true);
+                }
+                if (returnData.ValueAry.Count != 2)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"returnData.ValueAry 內容應為[藥局, 護理站]";
+                    return returnData.JsonSerializationt(true);
+                }
+                List<ServerSettingClass> serverSettingClasses = ServerSettingClassMethod.WebApiGet($"{API_Server}");
+                serverSettingClasses = serverSettingClasses.MyFind("Main", "網頁", "API01");
+                if (serverSettingClasses.Count == 0)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"找無Server資料!";
+                    return returnData.JsonSerializationt();
+                }
+
+                string API = serverSettingClasses[0].Server;
+                //string API = $"http://{Server}:4436";
+                string 藥局 = returnData.ValueAry[0];
+                string 護理站 = returnData.ValueAry[1];
+                List<medCarInfoClass> bedList = ExecuteUDPDPPF1(藥局, 護理站);
+                List<medCarInfoClass> bedListInfo = ExecuteUDPDPPF0(bedList);
+                List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedListInfo);
+                List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(update_medCarInfoClass);
+        
+
+                List<medCarInfoClass> update = new List<medCarInfoClass>();
+                foreach (var medCarInfoClass in update_medCarInfoClass)
+                {
+                    List<medCpoeClass> medCpoeClasses = bedListCpoe
+                        .Where(temp => temp.Master_GUID == medCarInfoClass.GUID)
+                        .ToList();
+                    if (medCpoeClasses.Count == 0 && medCarInfoClass.占床狀態 == "已佔床")
+                    {
+                        medCarInfoClass.調劑狀態 = "Y";
+                        update.Add(medCarInfoClass);
+                    }
+                }
+                if (update.Count != 0) medCarInfoClass.update_med_carinfo(API, update);
+
+
+                returnData.Code = 200;
+                returnData.TimeTaken = $"{myTimerBasic}";
+                returnData.Data = "";
+                returnData.Result = $"取得 {護理站} 病床資訊共{bedList.Count}筆";
+                return returnData.JsonSerializationt(true);
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = -200;
+                returnData.Result = $"Exception:{ex.Message}";
+                return returnData.JsonSerializationt(true);
+            }
+        }
         [HttpGet("UDPDPPF1")]
         public string UDPDPPF1()
         {
