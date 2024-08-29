@@ -26,14 +26,18 @@ namespace DB2VM_API.Controller
         public string Get()
         {
             string vallue = "VGHLNXVG";
-            string table = "XVGHF3";
-            String MyDb2ConnectionString = $"server={conString};database={table};userid={DB2_userid};password={DB2_password};";
+            string vv = "XVGHF3";
+            String MyDb2ConnectionString = $"server={DB2_server};database={DB2_database};userid={"XVGHF3"};password={DB2_password};";
             DB2Connection MyDb2Connection = new DB2Connection(MyDb2ConnectionString);
 
 
             try
             {
                 MyDb2Connection.Open();
+                DB2Command cmd = new DB2Command();
+                cmd.Connection = MyDb2Connection;
+                cmd.CommandText = "SELECT * FROM VGHLNXVG.DIMAUTRN";
+                cmd.ExecuteNonQuery();
             }
             catch
             {
