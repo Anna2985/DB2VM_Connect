@@ -27,7 +27,7 @@ namespace DB2VM_API.Controller
         {
             string vallue = "VGHLNXVG";
             string vv = "XVGHF3";
-            String MyDb2ConnectionString = $"server={DB2_server};database={DB2_database};userid={"XVGHF3"};password={DB2_password};";
+            String MyDb2ConnectionString = $"server={DB2_server};database={DB2_database};userid={"XVGHF3"};password={"QWER1234"};";
             DB2Connection MyDb2Connection = new DB2Connection(MyDb2ConnectionString);
 
 
