@@ -1159,19 +1159,24 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Administrator\\.nuget\\packages\\": {}
+    "C:\\Users\\sis87\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Administrator\\source\\repos\\DB2VM_Connect\\DB2VM_API.csproj",
+      "projectUniqueName": "C:\\Users\\sis87\\Source\\Repos\\DB2VM_Connect\\DB2VM_API.csproj",
       "projectName": "DB2VM_API",
-      "projectPath": "C:\\Users\\Administrator\\source\\repos\\DB2VM_Connect\\DB2VM_API.csproj",
-      "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Administrator\\source\\repos\\DB2VM_Connect\\obj\\",
+      "projectPath": "C:\\Users\\sis87\\Source\\Repos\\DB2VM_Connect\\DB2VM_API.csproj",
+      "packagesPath": "C:\\Users\\sis87\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\sis87\\Source\\Repos\\DB2VM_Connect\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\sis87\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [

@@ -66,9 +66,9 @@ namespace DB2VM_API.Controller.API_SP
                 string 藥局 = returnData.ValueAry[0];
                 string 護理站 = returnData.ValueAry[1];
                 List<medCarInfoClass> bedList = ExecuteUDPDPPF1(藥局, 護理站);              
-                List<string> valueAry = new List<string> { 藥局, 護理站 };
-                List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedList);
-                List<medCarInfoClass> out_medCarInfoClass = medCarInfoClass.get_bed_list_by_cart(API, valueAry);
+                //List<string> valueAry = new List<string> { 藥局, 護理站 };
+                medCarInfoClass.update_med_carinfo(API, bedList);
+                List<medCarInfoClass> out_medCarInfoClass = medCarInfoClass.get_bed_list_by_cart(API, returnData.ValueAry);
                 returnData.Code = 200;
                 returnData.TimeTaken = $"{myTimerBasic}";
                 returnData.Data = out_medCarInfoClass;
@@ -83,13 +83,13 @@ namespace DB2VM_API.Controller.API_SP
             }
         }
         /// <summary>
-        ///以藥局和護理站和床號取得病人詳細資料
+        ///以GUID取得病人詳細資料
         /// </summary>
         /// <remarks>
         /// 以下為JSON範例
         /// <code>
         ///     {
-        ///         "ValueAry":[藥局, 護理站, 床號]
+        ///         "ValueAry":[GUID]
         ///     }
         /// </code>
         /// </remarks>
@@ -139,8 +139,8 @@ namespace DB2VM_API.Controller.API_SP
                 List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(bedListInfo);
                 if (bedListCpoe.Count == 0) bedListInfo[0].調劑狀態 = "Y";
 
-                List<medCarInfoClass> update_medCarInfoClass = medCarInfoClass.update_med_carinfo(API, bedListInfo);
-                List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe);
+                medCarInfoClass.update_med_carinfo(API, bedListInfo);
+                medCpoeClass.update_med_cpoe(API, bedListCpoe);
                 medCarInfoClass out_medCarInfoClass = medCarInfoClass.get_patient_by_GUID(API, returnData.ValueAry);
 
                 returnData.Code = 200;
@@ -163,6 +163,7 @@ namespace DB2VM_API.Controller.API_SP
         /// 以下為JSON範例
         /// <code>
         ///     {
+        ///         "Value":"調劑台"
         ///         "ValueAry":[藥局, 護理站]
         ///     }
         /// </code>
@@ -200,19 +201,44 @@ namespace DB2VM_API.Controller.API_SP
                     returnData.Result = $"returnData.ValueAry 內容應為[藥局, 護理站]";
                     return returnData.JsonSerializationt(true);
                 }
+
+                if (returnData.Value == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"returnData.Value 無傳入資料";
+                    return returnData.JsonSerializationt(true);
+                }
+
                 string 藥局 = returnData.ValueAry[0];
                 string 護理站 = returnData.ValueAry[1];
                 string API = serverSettingClasses[0].Server;
-                //string API = $"http://{Server}:4436";
-                List<string> valueAry = new List<string> { 藥局, 護理站 };
+
                 List<medCarInfoClass> bedList = ExecuteUDPDPPF1(藥局, 護理站);
-                List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(bedList);
-                List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe);
-                List<medQtyClass> get_med_qty = medCpoeClass.get_med_qty(API, valueAry);
+                List<medCarInfoClass> bedListInfo = ExecuteUDPDPPF0(bedList);
+                medCarInfoClass.update_med_carinfo(API, bedListInfo);
+                List<medCarInfoClass> out_medCarInfoClass = medCarInfoClass.get_bed_list_by_cart(API, returnData.ValueAry);
+                List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(out_medCarInfoClass);
+                medCpoeClass.update_med_cpoe(API, bedListCpoe);
+
+                List<medCarInfoClass> update = new List<medCarInfoClass>();
+                foreach (var medCarInfoClass in out_medCarInfoClass)
+                {
+                    List<medCpoeClass> medCpoeClasses = bedListCpoe
+                        .Where(temp => temp.Master_GUID == medCarInfoClass.GUID)
+                        .ToList();
+                    if (medCpoeClasses.Count == 0 && medCarInfoClass.占床狀態 == "已佔床")
+                    {
+                        medCarInfoClass.調劑狀態 = "Y";
+                        update.Add(medCarInfoClass);
+                    }
+                }
+                if (update.Count != 0) medCarInfoClass.update_med_carinfo(API, update);
+
+                List<medQtyClass> get_med_qty = medCpoeClass.get_med_qty(API, returnData.Value,returnData.ValueAry);
                 if (get_med_qty == null)
                 {
-                    returnData.Code = -200;
-                    returnData.Result = $"returnData.ValueAry 無傳入資料";
+                    returnData.Code = 200;
+                    returnData.Result = $"無藥品處方資料";
                     return returnData.JsonSerializationt(true);
                 }
                 returnData.Code = 200;
@@ -268,13 +294,9 @@ namespace DB2VM_API.Controller.API_SP
                     return returnData.JsonSerializationt();
                 }
                 string API = serverSettingClasses[0].Server;
-                //string API = $"http://{Server}:4436";
-                string GUID = returnData.ValueAry[0];
-                //List<string> valueAry = new List<string> { GUID };
-                //List<medCarInfoClass> bedList = medCarInfoClass.get_patient_by_GUID(API, valueAry);
                 List<medCarInfoClass> bedList = new List<medCarInfoClass> { medCarInfoClass.get_patient_by_GUID(API, returnData.ValueAry) };
                 List<medCpoeRecClass> medCpoe_change = ExecuteUDPDPORD(bedList);
-                List<medCpoeRecClass> update_medCpoe_change = medCpoeRecClass.update_med_CpoeRec(API,medCpoe_change);
+                medCpoeRecClass.update_med_CpoeRec(API,medCpoe_change);
                 List<medCarInfoClass> get_patient = medCpoeRecClass.get_medChange_by_GUID(API, returnData.ValueAry);
 
                 string 藥局 = bedList[0].藥局;
@@ -346,11 +368,11 @@ namespace DB2VM_API.Controller.API_SP
                 List<medCpoeClass> bedListCpoe = ExecuteUDPDPDSP(update_medCarInfoClass);
                 List<medCpoeClass> update_medCpoeClass = medCpoeClass.update_med_cpoe(API, bedListCpoe);
 
-                HIS_DB_Lib.returnData returnData1 = medCpoeClass.handover(API, returnData.ValueAry);
+                HIS_DB_Lib.returnData returnData_handover = medCpoeClass.handover(API, returnData.ValueAry);
 
-                returnData1.Code = 200;
-                returnData1.TimeTaken = $"{myTimerBasic}";
-                return returnData1.JsonSerializationt(true);
+                returnData_handover.Code = 200;
+                returnData_handover.TimeTaken = $"{myTimerBasic}";
+                return returnData_handover.JsonSerializationt(true);
             }
             catch (Exception ex)
             {
