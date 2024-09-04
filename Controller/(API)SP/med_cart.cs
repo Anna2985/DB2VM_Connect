@@ -1080,7 +1080,6 @@ namespace DB2VM_API.Controller.API_SP
                 return medInfoClasses;
             }
         }
-
         private string age(string birthday)
         {
             int birthYear = birthday.Substring(0, 4).StringToInt32();
